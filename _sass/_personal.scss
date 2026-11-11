@@ -397,11 +397,12 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 .page__content a { text-underline-offset: .16em; }
 
 .author-profile {
+  --profile-inset: clamp(.6rem, 3vw, .85rem);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: .85rem;
-  padding: .85rem;
+  gap: var(--profile-inset);
+  padding: var(--profile-inset);
   border: 1px solid var(--site-border);
   background-color: var(--site-surface);
 }
@@ -421,7 +422,8 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   position: relative;
   display: block;
   align-self: stretch;
-  width: clamp(2.5rem, 12vw, 3rem);
+  width: var(--profile-photo-size, clamp(2.5rem, 12vw, 3rem));
+  height: var(--profile-photo-size, auto);
   overflow: hidden;
   background-color: var(--site-avatar);
 }
@@ -474,6 +476,11 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 .author__urls-wrapper .btn--inverse:hover { background-color: var(--site-footer); }
 .author__urls .fab, .author__urls .ai { color: var(--site-muted); }
 
+@media (width < 925px) {
+  .sidebar .author__name { text-box: trim-start cap text; }
+  .author-profile .author__bio { text-box: trim-end text; }
+}
+
 @media (min-width: 925px) {
   .author-profile {
     grid-template-columns: minmax(0, 1fr);
@@ -489,6 +496,7 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 
   .author-profile .author__avatar {
     width: 100%;
+    height: auto;
     aspect-ratio: 1;
   }
 
