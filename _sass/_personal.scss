@@ -84,11 +84,12 @@
 }
 
 @media screen {
+  :root:not([data-theme]),
   :root[data-theme="dark"] { @include site-dark-colors; }
 }
 
 @media screen and (prefers-color-scheme: dark) {
-  :root:not([data-theme]) { @include site-dark-colors; }
+  :root[data-theme="system"] { @include site-dark-colors; }
 }
 
 html { scrollbar-gutter: stable; }
@@ -399,7 +400,7 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: .8rem;
+  gap: .85rem;
   padding: .85rem;
   border: 1px solid var(--site-border);
   background-color: var(--site-surface);
@@ -419,7 +420,8 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 .author-profile .author__avatar {
   position: relative;
   display: block;
-  width: 2.75rem;
+  align-self: start;
+  width: clamp(3.5rem, 18vw, 4.5rem);
   aspect-ratio: 1;
   overflow: hidden;
   background-color: var(--site-avatar);
@@ -441,6 +443,7 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 
 .author-profile .author__content {
   display: block;
+  align-self: start;
   padding: 0;
   line-height: 1.4;
 }

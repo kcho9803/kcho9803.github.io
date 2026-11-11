@@ -1,23 +1,20 @@
 (() => {
   const storageKey = 'site-theme';
   const root = document.documentElement;
-  let preference = 'system';
+  const defaultTheme = 'dark';
+  let preference = defaultTheme;
 
   function readPreference() {
     try {
       const saved = localStorage.getItem(storageKey);
-      return saved === 'light' || saved === 'dark' ? saved : 'system';
+      return ['dark', 'light', 'system'].includes(saved) ? saved : defaultTheme;
     } catch {
       return preference;
     }
   }
 
   function applyTheme() {
-    if (preference === 'system') {
-      root.removeAttribute('data-theme');
-    } else {
-      root.setAttribute('data-theme', preference);
-    }
+    root.dataset.theme = preference;
   }
 
   function restoreTheme() {
@@ -41,11 +38,7 @@
       applyTheme();
 
       try {
-        if (preference === 'system') {
-          localStorage.removeItem(storageKey);
-        } else {
-          localStorage.setItem(storageKey, preference);
-        }
+        localStorage.setItem(storageKey, preference);
       } catch {
         // The selection still applies for this page.
       }
