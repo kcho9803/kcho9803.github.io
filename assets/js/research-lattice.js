@@ -22,6 +22,12 @@
   const maxSide = 32;
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
   const liveSource = loopback && canvas.dataset.liveLattice;
+  if (!liveSource) {
+    void import('./lattice-recording.js').then(({ playLatticeRecording }) => {
+      playLatticeRecording(canvas);
+    });
+    return;
+  }
 
   let side = 16;
   let requestedSide = side;
@@ -197,75 +203,6 @@
     return visible && !document.hidden && !reducedMotion.matches;
   }
 
-  function randomIndex(count) {
-    return Math.floor(Math.random() * count);
-  }
-
-  // Script an illustrative path and decorative pulses for the static site.
-  function illustrate(size) {
-    const cells = size * size;
-    const length = Math.min(12, Math.round(size * .48));
-    const horizontal = 2 + randomIndex(length - 2);
-    const vertical = length - horizontal;
-    const bend = 1 + randomIndex(horizontal - 1);
-    const dx = randomIndex(2) ? 1 : -1;
-    const dy = randomIndex(2) ? 1 : -1;
-    let x = 1 + randomIndex(size - horizontal - 2) + (dx < 0 ? horizontal : 0);
-    let y = 1 + randomIndex(size - vertical - 2) + (dy < 0 ? vertical : 0);
-    const chain = [];
-    for (let i = 0; i < length; i++) {
-      if (i >= bend && i < bend + vertical) {
-        chain.push(cells + Math.min(y, y + dy) * size + x);
-        y += dy;
-      } else {
-        chain.push(y * size + Math.min(x, x + dx));
-        x += dx;
-      }
-    }
-
-    // Retract the path from its ends so the two markers meet on the last edge.
-    let left = 0;
-    let right = chain.length - 1;
-    const changes = chain.map((_, i) => [
-      .27 + .7 * (i + 1) / length,
-      chain[i % 2 === 0 ? left++ : right--]
-    ]);
-
-    const hops = [];
-    const dots = [];
-    const trains = Math.min(16, size + 3);
-    for (let train = 0; train < trains; train++) {
-      const direction = randomIndex(directions.length);
-      const [stepX, screenY] = directions[direction];
-      const stepY = -screenY;
-      const steps = 2 + randomIndex(4);
-      const along = randomIndex(size - steps);
-      const across = randomIndex(size);
-      let site = stepX
-        ? across * size + along + (stepX < 0 ? steps : 0)
-        : (along + (stepY < 0 ? steps : 0)) * size + across;
-      let stamp = .03 + .68 * (train + Math.random()) / trains;
-      for (let step = 0; step < steps; step++) {
-        dots.push([site, stamp, stamp + .03]);
-        stamp += .05;
-        hops.push([stamp, site, direction]);
-        site += stepX + stepY * size;
-      }
-      dots.push([site, stamp, stamp + .04]);
-    }
-    hops.sort((a, b) => a[0] - b[0]);
-
-    const messageFrames = Array.from({ length: 65 }, (_, i) => {
-      const phase = i / 64;
-      const bits = Array(cells).fill('0');
-      for (const [site, from, to] of dots) {
-        if (phase >= from && phase < to) bits[site] = '1';
-      }
-      return [phase, bits.join('')];
-    });
-    return { size, chain, changes, hops, messageFrames };
-  }
-
   async function loadCycle() {
     if (loading || next || retryTimer !== undefined || unavailable) return;
     const cycleSide = requestedSide;
@@ -359,10 +296,7 @@
       draw();
       return;
     }
-    if (!next) {
-      if (liveSource && !unavailable) void loadCycle();
-      else next = illustrate(requestedSide);
-    }
+    if (!next) void loadCycle();
     if (animation === undefined && (next || cycle)) animation = requestAnimationFrame(tick);
   }
 
