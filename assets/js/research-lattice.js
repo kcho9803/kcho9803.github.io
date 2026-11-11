@@ -23,7 +23,7 @@
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
   const liveSource = loopback && canvas.dataset.liveLattice;
   if (!liveSource) {
-    void import('./lattice-recording.js?v=2').then(({ playLatticeRecording }) => {
+    void import('./lattice-recording.js?v=3').then(({ playLatticeRecording }) => {
       playLatticeRecording(canvas);
     });
     return;

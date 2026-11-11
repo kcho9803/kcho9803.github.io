@@ -1,5 +1,5 @@
 const layers = ['chain', 'defect', 'pulse'];
-const footage = new URL('../video/lattice-loop.mp4?v=2', import.meta.url);
+const footage = new URL('../video/lattice-loop.mp4?v=3', import.meta.url);
 
 export function playLatticeRecording(canvas) {
   const output = canvas.getContext('2d');
