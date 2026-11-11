@@ -3,11 +3,13 @@
   const root = document.documentElement;
   let preference = 'system';
 
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved === 'light' || saved === 'dark') preference = saved;
-  } catch {
-    // The system setting still works when storage is unavailable.
+  function readPreference() {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved === 'light' || saved === 'dark' ? saved : 'system';
+    } catch {
+      return preference;
+    }
   }
 
   function applyTheme() {
@@ -18,14 +20,22 @@
     }
   }
 
-  applyTheme();
+  function restoreTheme() {
+    preference = readPreference();
+    applyTheme();
+    const selector = document.getElementById('site-theme');
+    if (selector) selector.value = preference;
+  }
+
+  restoreTheme();
+  window.addEventListener('pagereveal', restoreTheme);
+  window.addEventListener('pageshow', restoreTheme);
 
   document.addEventListener('DOMContentLoaded', () => {
     const selector = document.getElementById('site-theme');
     if (!selector) return;
 
     selector.value = preference;
-    selector.hidden = false;
     selector.addEventListener('change', () => {
       preference = selector.value;
       applyTheme();

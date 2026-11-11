@@ -8,6 +8,7 @@ vendor/
 node_modules/
 private/
 _private/
+/.codex-remote-attachments/
 /RESEARCH_BRIEF_HANDOFF.md
 *.local.*
 .env

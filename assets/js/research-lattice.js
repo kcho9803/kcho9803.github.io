@@ -1,12 +1,11 @@
-(() => {
-  const canvas = document.querySelector('.research-lattice');
-  const ctx = canvas?.getContext('2d');
+function mountLattice(canvas) {
+  const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
   // Edges are horizontal first, then vertical. Site coordinates increase north.
   const east = [1, 0];
   const north = [0, -1];
-  const directions = [east, [-1, 0], north, [0, 1]];
+  const directions = [east, [-1, 0], north];
   const bitCounts = [0, 1, 1, 2, 1, 2, 2, 3];
   const stillChain = [180, 181, 422, 166, 167, 408, 152];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -166,6 +165,7 @@
     const hasStart = defects.has(start);
     const hasEnd = defects.has(end);
     const pair = hasStart && hasEnd;
+    const centeredPair = pair;
     const axis = edge < sites ? east : north;
 
     ctx.clearRect(0, 0, side, side);
@@ -179,7 +179,7 @@
     if (moving) {
       const grows = !chain.has(edge);
       const length = grows ? progress : 1 - progress;
-      const from = pair ? (1 - length) / 2 : hasEnd === grows ? 1 - length : 0;
+      const from = centeredPair ? (1 - length) / 2 : hasEnd === grows ? 1 - length : 0;
       segment(start, axis, from, from + length);
     }
     ctx.stroke();
@@ -193,14 +193,14 @@
     }
     if (moving) {
       if (pair) ctx.globalAlpha *= 1 - smooth((progress - .5) / .5);
-      if (hasStart) drawSquare(start, axis, pair ? progress / 2 : progress);
-      if (hasEnd) drawSquare(start, axis, pair ? 1 - progress / 2 : 1 - progress);
+      if (hasStart) drawSquare(start, axis, pair ? (centeredPair ? progress / 2 : 0) : progress);
+      if (hasEnd) drawSquare(start, axis, 1 - progress * (centeredPair ? .5 : 1));
     }
     ctx.globalAlpha = 1;
   }
 
   function canPlay() {
-    return visible && !document.hidden && !reducedMotion.matches;
+    return canvas.isConnected && visible && !document.hidden && !reducedMotion.matches;
   }
 
   async function loadCycle() {
@@ -310,6 +310,7 @@
   setChain(stillChain);
   refreshColors();
   new ResizeObserver(([entry]) => {
+    if (!canvas.isConnected) return;
     size = Math.max(1, Math.round(entry.contentRect.width * Math.min(devicePixelRatio, 2)));
     canvas.width = canvas.height = size;
     ctx.setTransform(size / side, 0, 0, size / side, 0, 0);
@@ -330,4 +331,15 @@
   }).observe(canvas);
   reducedMotion.addEventListener('change', schedule);
   document.addEventListener('visibilitychange', schedule);
-})();
+}
+
+function initializeLattice() {
+  const canvas = document.querySelector('.research-lattice');
+  if (!canvas) return;
+  // Navigation retains the homepage node, so a single instance can pause and resume.
+  document.removeEventListener('site:page-change', initializeLattice);
+  mountLattice(canvas);
+}
+
+document.addEventListener('site:page-change', initializeLattice);
+initializeLattice();

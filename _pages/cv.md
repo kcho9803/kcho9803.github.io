@@ -10,7 +10,7 @@ redirect_from:
 
 **Purdue University** · August 2024–present<br>
 Physics PhD student, Department of Physics and Astronomy.<br>
-Advisor: [Tyler Ellison](https://quantum.research.purdue.edu/directory/tyler-ellison/) (since August 2026).
+Advisor: [Prof. Tyler Ellison](https://quantum.research.purdue.edu/directory/tyler-ellison/) (since August 2026).
 
 **Gwangju Institute of Science and Technology (GIST)** · March 2017–August 2024<br>
 B.S. in Physics, with minors in EECS and Mathematics.

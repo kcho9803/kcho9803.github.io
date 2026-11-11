@@ -34,6 +34,9 @@ for (const file of files) {
   if (/C:[\\/]+Users[\\/]|file:\/\//i.test(content)) errors.push(`Local path in ${relative}`);
   if (/\{%|\{\{/.test(content) && file.endsWith('.html')) errors.push(`Unrendered Liquid in ${relative}`);
   if (!file.endsWith('.html')) continue;
+  for (const match of content.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["']/gi)) {
+    if (/\.xml(?:[?#]|$)/i.test(match[1])) errors.push(`XML page linked from ${relative}: ${match[1]}`);
+  }
   for (const match of content.matchAll(/\b(?:href|src)\s*=\s*["']([^"']+)["']/gi)) {
     const raw = match[1].replaceAll('&amp;', '&');
     if (/^(?:#|mailto:|tel:|data:|javascript:)/i.test(raw)) continue;

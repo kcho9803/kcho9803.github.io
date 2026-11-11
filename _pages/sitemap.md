@@ -13,5 +13,3 @@ sitemap: false
 {% for paper in site.publications reversed %}
 - [{{ paper.title }}]({{ paper.url | relative_url }})
 {% endfor %}
-
-[XML sitemap]({{ '/sitemap.xml' | relative_url }})

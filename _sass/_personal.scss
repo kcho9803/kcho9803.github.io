@@ -16,66 +16,71 @@
 
 :root {
   color-scheme: light;
-  --site-background: #f4f6fa;
-  --site-text: #18263c;
-  --site-muted: #4b5d75;
-  --site-title: #0e1c34;
-  --site-link: #244c80;
-  --site-link-visited: #3e5b86;
-  --site-link-hover: #112d51;
-  --site-border: #cdd7e4;
-  --site-control-border: #657b97;
-  --site-surface: #fff;
-  --site-footer: #eaf0f7;
-  --site-avatar: #142744;
-  --site-avatar-text: #f5f8fc;
-  --site-code: #e9eff6;
+  --site-background: #f3f2ea;
+  --site-text: #263026;
+  --site-muted: #4f5b4b;
+  --site-title: #263026;
+  --site-link: #625333;
+  --site-link-visited: #605a47;
+  --site-link-hover: #42361f;
+  --site-border: #bdc5b8;
+  --site-control-border: #727d69;
+  --site-surface: #fbfaf5;
+  --site-footer: #e9ebe1;
+  --site-avatar: #292f26;
+  --site-avatar-text: #e5e8dd;
+  --site-code: #e8ece1;
+  --site-syntax-literal: #705139;
+  --site-syntax-string: #4c5d39;
+  --site-syntax-type: #365845;
+  --site-syntax-error: #8b3f36;
+  --site-syntax-builtin: #5e5135;
+  --site-syntax-text: var(--site-text);
+  --site-syntax-comment: var(--site-muted);
+  --site-syntax-keyword: var(--site-link);
   --site-width: 74rem;
   --site-gutter: clamp(1rem, 4vw, 2.75rem);
-  --hero-background: #e5edf7;
-  --hero-grid-background: #dce8f6;
-  --hero-ink: #142744;
-  --hero-label: #3c5779;
-  --hero-rule: #a5b8d0;
-  --hero-grid-line: #b5c8de;
-  --hero-chain: #365e8c;
-  --hero-defect: #142e53;
-  --hero-pulse: #497eb9;
+  --hero-background: #e5e9de;
+  --hero-grid-background: #dce4d8;
+  --hero-ink: #263026;
+  --hero-label: #4c5c49;
+  --hero-rule: #9da899;
+  --hero-grid-line: #b5bfae;
+  --hero-chain: #625333;
+  --hero-defect: #45412e;
+  --hero-pulse: #76623b;
 }
 
 @mixin site-dark-colors {
   color-scheme: dark;
-  --site-background: #0d1524;
-  --site-text: #dce6f4;
-  --site-muted: #a6b6cd;
-  --site-title: #edf4fc;
-  --site-link: #a6caff;
-  --site-link-visited: #a7b9d6;
-  --site-link-hover: #e1edff;
-  --site-border: #314561;
-  --site-control-border: #7791b6;
-  --site-surface: #142136;
-  --site-footer: #101c30;
-  --site-avatar: #203653;
-  --site-avatar-text: #d8e9ff;
-  --site-code: #111f33;
-  --site-syntax-text: #dce6f4;
-  --site-syntax-comment: #a6b6cd;
-  --site-syntax-keyword: #a6caff;
-  --site-syntax-literal: #cadcf5;
-  --site-syntax-string: #b4dced;
-  --site-syntax-type: #93c6ef;
-  --site-syntax-error: #eef5ff;
-  --site-syntax-builtin: #bbd1ee;
-  --hero-background: #142744;
-  --hero-grid-background: #102039;
-  --hero-ink: #edf4fc;
-  --hero-label: #a9c5e7;
-  --hero-rule: #456184;
-  --hero-grid-line: #294361;
-  --hero-chain: #a9c5e7;
-  --hero-defect: #d4e6fc;
-  --hero-pulse: #72b9ff;
+  --site-background: #181c18;
+  --site-text: #e5e8dd;
+  --site-muted: #adb7a7;
+  --site-title: #e5e8dd;
+  --site-link: #c4b28c;
+  --site-link-visited: #bdb499;
+  --site-link-hover: #e2d0a7;
+  --site-border: #4b5548;
+  --site-control-border: #85917c;
+  --site-surface: #222821;
+  --site-footer: #1d231c;
+  --site-avatar: #292f26;
+  --site-avatar-text: #e5e8dd;
+  --site-code: #1c211b;
+  --hero-background: #292f26;
+  --hero-grid-background: #161d17;
+  --hero-ink: #e5e8dd;
+  --hero-label: #adb7a7;
+  --hero-rule: #4b5548;
+  --hero-grid-line: #3e4b3d;
+  --hero-chain: #c4b28c;
+  --hero-defect: #e5e8dd;
+  --hero-pulse: #d1be91;
+  --site-syntax-literal: #d9b998;
+  --site-syntax-string: #bfca9e;
+  --site-syntax-type: #b9c9b0;
+  --site-syntax-error: #e4a99c;
+  --site-syntax-builtin: #d1c3a4;
 }
 
 @media screen {
@@ -85,6 +90,8 @@
 @media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme]) { @include site-dark-colors; }
 }
+
+html { scrollbar-gutter: stable; }
 
 html, body {
   background-color: var(--site-background);
@@ -113,6 +120,10 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   border-bottom-color: var(--site-border);
   background-color: var(--site-surface);
   animation: none;
+}
+
+.masthead a {
+  transition: color 180ms ease, border-color 180ms ease;
 }
 
 .masthead__inner-wrap {
@@ -165,7 +176,7 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 }
 
 .site-nav__links a:hover, .site-nav__links a[aria-current="page"] {
-  color: var(--site-title);
+  color: var(--site-link);
 }
 
 .site-nav .site-nav__links a {
@@ -232,7 +243,7 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   cursor: pointer;
 }
 
-.site-theme[hidden] { display: none; }
+.no-js .site-theme { display: none; }
 
 @media (max-width: 680px) {
   .site-nav { display: none; }
@@ -294,10 +305,14 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   text-transform: uppercase;
 }
 
+.research-hero h1,
+.page__title {
+  font-size: clamp(1.43rem, 3.33vw, 2.93rem);
+}
+
 .research-hero h1 {
   max-width: 17ch;
   margin: 0;
-  font-size: clamp(1.43rem, 3.33vw, 2.93rem);
   font-weight: 620;
   line-height: 1.06;
   letter-spacing: -.055em;
@@ -353,7 +368,6 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 .page__title {
   margin-bottom: 0;
   color: var(--site-title);
-  font-size: clamp(2rem, 4vw, 3.5rem);
   font-weight: 620;
   letter-spacing: -.05em;
   line-height: 1.12;
@@ -402,10 +416,27 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   font: 500 .9rem / 1 $monospace;
 }
 
-.author__avatar img {
+.author-profile .author__avatar {
+  position: relative;
   display: block;
+  width: 2.75rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background-color: var(--site-avatar);
+}
+
+.author-profile .author__avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
   padding: 0;
+  border: 0;
   border-radius: 0;
+  object-fit: cover;
+  transform: scale(1.3);
+  transform-origin: left 25%;
+  filter: saturate(.9);
 }
 
 .author-profile .author__content {
@@ -451,6 +482,8 @@ a:focus-visible, button:focus-visible, select:focus-visible {
     height: 3.5rem;
     font-size: 1rem;
   }
+
+  .author-profile .author__avatar { width: 100%; }
 
   .author-profile .author__urls {
     padding-top: .8rem;
@@ -539,7 +572,8 @@ div.highlighter-rouge::before, figure.highlight::before {
 }
 
 @media (max-width: 600px) {
-  .research-hero h1 { font-size: clamp(1.15rem, 4.5vw, 1.55rem); }
+  .research-hero h1,
+  .page__title { font-size: clamp(1.15rem, 4.5vw, 1.55rem); }
   .research-hero__eyebrow { font-size: .58rem; }
   .page__footer-copyright { margin-inline-start: 0; }
 }

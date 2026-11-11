@@ -9,7 +9,7 @@ redirect_from:
   - /about.html
 ---
 
-I'm **Kyungchan Cho**, a Physics PhD student in the [Department of Physics and Astronomy at Purdue University](https://www.physics.purdue.edu/), working with [Tyler Ellison](https://quantum.research.purdue.edu/directory/tyler-ellison/). I study **local decoding for topological quantum memories**, using the toric code as a test case.
+I'm **Kyungchan Cho**, a Physics PhD student in the [Department of Physics and Astronomy at Purdue University](https://www.physics.purdue.edu/), working with [Prof. Tyler Ellison](https://quantum.research.purdue.edu/directory/tyler-ellison/). I study **local decoding for topological quantum memories**, using the toric code as a test case.
 
 My research asks how a decoder can keep correcting errors as they occur when it has access only to nearby information, has limited memory, and can itself be noisy. I use mathematical analysis and simulations to study both hand-designed and learned local update rules, with the goal of autonomous error correction.
 
