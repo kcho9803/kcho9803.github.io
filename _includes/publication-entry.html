@@ -1,0 +1,8 @@
+{% assign paper = include.paper %}
+<article class="publication-entry">
+  <h2><a href="{{ paper.url | relative_url }}">{{ paper.title }}</a></h2>
+  <p class="publication-entry__authors">{{ paper.authors }}</p>
+  <p class="publication-entry__venue">{{ paper.citation }}</p>
+  <p>{{ paper.summary }}</p>
+  <p class="publication-entry__links"><a href="{{ paper.doi_url }}">Journal</a> <span aria-hidden="true">·</span> <a href="{{ paper.arxiv_url }}">arXiv</a></p>
+</article>

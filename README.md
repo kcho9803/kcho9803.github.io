@@ -1,31 +1,64 @@
-A Github Pages template for academic websites. This was forked (then detached) by [Stuart Geiger](https://github.com/staeiou) from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/), which is © 2016 Michael Rose and released under the MIT License. See LICENSE.md.
+# Kyungchan Cho's personal website
 
-I think I've got things running smoothly and fixed some major bugs, but feel free to file issues or make pull requests if you want to improve the generic template / theme.
+A Jekyll / GitHub Pages website focused on quantum error correction and quantum information, using the Academic Pages theme.
 
-### Note: if you are using this repo and now get a notification about a security vulnerability, delete the Gemfile.lock file. 
+## Edit the site
 
-# Instructions
+- `_pages/about.md`: homepage and research interests.
+- `_config.yml`: public profile, site metadata, and build settings.
+- `_publications/`: published paper records and short summaries.
+- `_data/writing.yml`: links to existing public articles.
+- `_pages/writing.html`: writing index; also lists local posts when added.
+- `_pages/cv.md`: education, research background, and teaching.
+- `_data/navigation.yml`: main menu.
+- `_sass/_personal.scss`: visual refinements.
 
-1. Register a GitHub account if you don't have one and confirm your e-mail (required!)
-1. Fork [this repository](https://github.com/academicpages/academicpages.github.io) by clicking the "fork" button in the top right. 
-1. Go to the repository's settings (rightmost item in the tabs that start with "Code", should be below "Unwatch"). Rename the repository "[your GitHub username].github.io", which will also be your website's URL.
-1. Set site-wide configuration and create content & metadata (see below -- also see [this set of diffs](http://archive.is/3TPas) showing what files were changed to set up [an example site](https://getorg-testacct.github.io) for a user with the username "getorg-testacct")
-1. Upload any files (like PDFs, .zip files, etc.) to the files/ directory. They will appear at https://[your GitHub username].github.io/files/example.pdf.  
-1. Check status by going to the repository settings, in the "GitHub pages" section
-1. (Optional) Use the Jupyter notebooks or python scripts in the `markdown_generator` folder to generate markdown files for publications and talks from a TSV file.
+Keep the web CV concise. Education lists degree programs at Purdue and GIST; GPAs and short-term exchange programs belong in the separate full CV PDF. Study-abroad scholarships may appear in the website's scholarship section.
 
-See more info at https://academicpages.github.io/
+The previous template's sample papers, blog posts, teaching entries, portfolio, map, and guide pages have been removed. The remaining theme files support the current site and future writing.
 
-## To run locally (not on GitHub Pages, to serve on your own computer)
+## Local preview
 
-1. Clone the repository and made updates as detailed above
-1. Make sure you have ruby-dev, bundler, and nodejs installed: `sudo apt install ruby-dev ruby-bundler nodejs`
-1. Run `bundle clean` to clean up the directory (no need to run `--force`)
-1. Run `bundle install` to install ruby dependencies. If you get errors, delete Gemfile.lock and try again.
-1. Run `bundle exec jekyll liveserve` to generate the HTML and serve it from `localhost:4000` the local server will automatically rebuild and refresh the pages on change.
+With Ruby and Bundler installed:
 
-# Changelog -- bugfixes and enhancements
+```sh
+bundle install
+bundle exec jekyll serve --config _config.yml,_config.dev.yml --host 127.0.0.1
+```
 
-There is one logistical issue with a ready-to-fork template theme like academic pages that makes it a little tricky to get bug fixes and updates to the core theme. If you fork this repository, customize it, then pull again, you'll probably get merge conflicts. If you want to save your various .yml configuration files and markdown files, you can delete the repository and fork it again. Or you can manually patch. 
+For a production build and output checks:
 
-To support this, all changes to the underlying code appear as a closed issue with the tag 'code change' -- get the list [here](https://github.com/academicpages/academicpages.github.io/issues?q=is%3Aclosed%20is%3Aissue%20label%3A%22code%20change%22%20). Each issue thread includes a comment linking to the single commit or a diff across multiple commits, so those with forked repositories can easily identify what they need to patch.
+```sh
+bundle exec jekyll build --strict_front_matter
+node scripts/check-site.mjs
+```
+
+The homepage lattice runs as an illustration generated in the browser. The local preview can use a separate decoder service on loopback.
+
+## Add a blog post
+
+Create `_posts/YYYY-MM-DD-short-title.md` with front matter:
+
+```yaml
+---
+title: "A descriptive title"
+date: YYYY-MM-DD
+excerpt: "A short public summary."
+---
+```
+
+Write the post below the front matter. Use `math: true` only for posts that need MathJax. Only already public material belongs in a post. The writing index and RSS feed update automatically.
+
+## Publication and confidentiality
+
+This is a public-source website. **Do not put confidential work anywhere in this repository**, including `_drafts`, front matter, HTML comments, attachments, or Git history. Keep research drafts in a separate private location. Ignoring or excluding a file from Jekyll does not make a committed file private.
+
+`private/`, `_private/`, environment files, and local tooling are ignored as a precaution. Production settings disable drafts, future posts, and `published: false` content. These settings control output, not access to the source repository.
+
+Use only published papers, existing public writing, verified biographical information, and explicitly approved descriptions. Never copy unpublished project names, results, figures, benchmarks, manuscripts, or local project paths into the website. See [public sources](docs/public-sources.md) for the evidence used in the initial refresh.
+
+Building locally does not publish changes. Review the diff and generated site before pushing to the branch configured for GitHub Pages.
+
+## Credits
+
+Based on [Academic Pages](https://github.com/academicpages/academicpages.github.io), originally forked from [Minimal Mistakes](https://github.com/mmistakes/minimal-mistakes). The upstream MIT license is retained in `LICENSE`.

@@ -1,2 +1,14 @@
 _site/
-
+.bundle/
+.jekyll-cache/
+.sass-cache/
+.tools/
+.venv/
+vendor/
+node_modules/
+private/
+_private/
+/RESEARCH_BRIEF_HANDOFF.md
+*.local.*
+.env
+.env.*

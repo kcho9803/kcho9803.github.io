@@ -14,7 +14,20 @@ layout: default
   {% endunless %}
 {% endif %}
 
-<div id="main" role="main">
+<div id="main" class="site-main{% if page.author_profile or layout.author_profile or page.sidebar %} site-main--with-sidebar{% endif %}" role="main">
+  {% if page.research_hero %}
+    <header class="research-hero">
+      <div class="research-hero__heading">
+        <p class="research-hero__eyebrow">Physics &amp; quantum information</p>
+        <h1>{{ page.title | escape }}</h1>
+      </div>
+      <div class="research-hero__art" aria-hidden="true">
+        <canvas class="research-lattice"{% if site.local_lattice %} data-live-lattice="{{ site.local_lattice | relative_url }}"{% endif %}></canvas>
+      </div>
+    </header>
+    <script defer src="{{ '/assets/js/research-lattice.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+  {% endif %}
+
   {% include sidebar.html %}
 
   <article class="page" itemscope itemtype="http://schema.org/CreativeWork">
@@ -24,8 +37,8 @@ layout: default
     {% if page.modified %}<meta itemprop="dateModified" content="{{ page.modified | date: "%B %d, %Y" }}">{% endif %}
 
     <div class="page__inner-wrap">
-      {% unless page.header.overlay_color or page.header.overlay_image %}
-        <header>
+      {% unless page.research_hero or page.header.overlay_color or page.header.overlay_image %}
+        <header class="page__heading">
           {% if page.title %}<h1 class="page__title" itemprop="headline">{{ page.title | markdownify | remove: "<p>" | remove: "</p>" }}</h1>{% endif %}
           {% if page.read_time %}
             <p class="page__meta"><i class="fa fa-clock-o" aria-hidden="true"></i> {% include read-time.html %}</p>

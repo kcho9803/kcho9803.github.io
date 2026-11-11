@@ -1,16 +1,12 @@
 ---
-layout: archive
 title: "Publications"
 permalink: /publications/
-author_profile: true
+excerpt: "Published papers by Kyungchan Cho and collaborators."
 ---
 
-{% if author.googlescholar %}
-  You can also find my articles on <u><a href="{{author.googlescholar}}">my Google Scholar profile</a>.</u>
-{% endif %}
+My published work in holography, entanglement, and machine learning.
 
-{% include base_path %}
-
-{% for post in site.publications reversed %}
-  {% include archive-single.html %}
+{% assign papers = site.publications | sort: "date" | reverse %}
+{% for paper in papers %}
+{% include publication-entry.html paper=paper %}
 {% endfor %}

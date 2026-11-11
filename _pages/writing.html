@@ -1,0 +1,26 @@
+---
+title: "Writing"
+permalink: /writing/
+excerpt: "Research explainers and reflections by Kyungchan Cho."
+redirect_from:
+  - /year-archive/
+  - /wordpress/blog-posts/
+---
+
+<p>Short explanations of my published research and reflections on physics.</p>
+
+{% if site.posts.size > 0 %}
+<h2>On this site</h2>
+{% for post in site.posts %}
+  {% include archive-single.html %}
+{% endfor %}
+{% endif %}
+
+<h2>Previously published</h2>
+{% for article in site.data.writing %}
+<article class="writing-entry">
+  <p class="writing-entry__date"><time datetime="{{ article.date | date: '%Y-%m-%d' }}">{{ article.date | date: '%B %-d, %Y' }}</time> · LinkedIn</p>
+  <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
+  <p>{{ article.summary }}</p>
+</article>
+{% endfor %}
