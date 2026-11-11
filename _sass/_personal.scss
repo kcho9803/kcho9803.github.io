@@ -420,14 +420,15 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 .author-profile .author__avatar {
   position: relative;
   display: block;
-  align-self: start;
-  width: clamp(3.5rem, 18vw, 4.5rem);
-  aspect-ratio: 1;
+  align-self: stretch;
+  width: clamp(2.5rem, 12vw, 3rem);
   overflow: hidden;
   background-color: var(--site-avatar);
 }
 
 .author-profile .author__avatar img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -486,7 +487,10 @@ a:focus-visible, button:focus-visible, select:focus-visible {
     font-size: 1rem;
   }
 
-  .author-profile .author__avatar { width: 100%; }
+  .author-profile .author__avatar {
+    width: 100%;
+    aspect-ratio: 1;
+  }
 
   .author-profile .author__urls {
     padding-top: .8rem;
