@@ -229,6 +229,7 @@
               <p class="values">Components (y, z). The direction sign <var>s</var> is <span id="direction-sign">+1</span>.</p>
             </div>
           </div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>λ</mi><mo>=</mo><mn id="equation-wavelength">550</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">m</mi></mrow><mo separator="true">,</mo><mspace width="1em"/><mi>f</mi><mo>≈</mo><mn id="equation-frequency">545</mn><mtext> </mtext><mrow><mi mathvariant="normal">T</mi><mi mathvariant="normal">H</mi><mi mathvariant="normal">z</mi></mrow></mrow><annotation encoding="application/x-tex">\lambda=550\,\mathrm{nm},\quad f\approx545\,\mathrm{THz}</annotation></semantics></math></div>
           <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>T</mi><mo>=</mo><mn id="period-value">1.83</mn><mtext> </mtext><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">s</mi></mrow><mtext> </mtext><mo separator="true">,</mo><mspace width="1em"/><mi>ω</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><mi>T</mi></mfrac></mrow><annotation encoding="application/x-tex">T=1.83\,\mathrm{fs}\,,\quad \omega=\frac{2\pi}{T}</annotation></semantics></math></div>
           <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>ω</mi><mo>=</mo><mn id="angular-frequency-value">3.42</mn><mo>×</mo><msup><mn>10</mn><mn>15</mn></msup><mtext> </mtext><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">\omega=3.42\times10^{15}\,\mathrm{rad/s}</annotation></semantics></math></div>
         </div>
@@ -686,9 +687,6 @@
         show('single-magnetic-phase', theta);
         show('single-magnetic', displayNumber(bz * teslaToNanotesla / speedOfLight));
       }
-      const periodInFemtoseconds = wavelength * 1e6 / speedOfLight;
-      show('period-value', displayNumber(periodInFemtoseconds));
-      show('angular-frequency-value', displayNumber(2 * Math.PI / periodInFemtoseconds));
       show('classification', polarizationState.name + ' · axes in V/m');
       drawTransverse(y, z, polarizationState.peak);
     }
@@ -720,10 +718,15 @@
     }
 
     function syncWavelength() {
-      const frequency = Math.round(speedOfLight / (wavelength * 1000));
+      const frequency = speedOfLight / (wavelength * 1000);
+      const roundedFrequency = Math.round(frequency);
       wavelengthInput.value = wavelength;
-      wavelengthOutput.value = wavelength + ' nm · ' + frequency + ' THz';
-      wavelengthInput.setAttribute('aria-valuetext', wavelength + ' nanometers, ' + frequency + ' terahertz');
+      wavelengthOutput.value = wavelength + ' nm · ' + roundedFrequency + ' THz';
+      wavelengthInput.setAttribute('aria-valuetext', wavelength + ' nanometers, ' + roundedFrequency + ' terahertz');
+      show('equation-wavelength', String(wavelength));
+      show('equation-frequency', String(roundedFrequency));
+      show('period-value', displayNumber(1000 / frequency));
+      show('angular-frequency-value', displayNumber(2 * Math.PI * frequency / 1000));
     }
 
     function syncMixing() {
