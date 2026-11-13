@@ -240,7 +240,7 @@
         </div>
         <div class="transverse">
           <h2>Electric field in the <i>yz</i> plane</h2>
-          <canvas id="transverse-wave" role="img" aria-label="Electric-field vector and the path traced by its tip over one cycle. With two waves, the component vectors are added tip to tail. Positive y points right and positive z points up.">The electric field traces a path in the transverse plane.</canvas>
+          <canvas id="transverse-wave" role="img" aria-label="Electric-field vector and the path traced by its tip over one cycle. With two waves, both arrows start at the origin and dashed guides meet at the tip of the sum. Positive y points right and positive z points up.">The electric field traces a path in the transverse plane.</canvas>
           <p class="vector-key" id="vector-key" aria-hidden="true"><span class="vector-one">Wave 1 E₁</span><span class="vector-two">Wave 2 E₂</span><span class="vector-sum">Sum E</span></p>
           <p class="classification" id="classification" aria-live="polite"></p>
         </div>
@@ -394,28 +394,22 @@
       context.fill();
     }
 
-    function drawElectricSum(origin, joint, sum, context) {
-      const firstLength = Math.hypot(joint[0] - origin[0], joint[1] - origin[1]);
-      const secondLength = Math.hypot(sum[0] - joint[0], sum[1] - joint[1]);
-      if (orthogonal && Math.min(firstLength, secondLength) < 3) {
-        // Keep the wider red arrow visible behind the surviving contributor.
-        arrow(origin, sum, red, 6, 13, context);
-        arrow(origin, sum, firstLength >= 3 ? ochre : teal, 2.5, 9, context);
+    function drawElectricSum(origin, first, second, sum, context) {
+      const firstLength = Math.hypot(first[0] - origin[0], first[1] - origin[1]);
+      const secondLength = Math.hypot(second[0] - origin[0], second[1] - origin[1]);
+      if (orthogonal && Math.min(firstLength, secondLength) >= 3) {
+        segment(first, sum, teal, 1.5, [4, 3], context);
+        segment(second, sum, ochre, 1.5, [4, 3], context);
+        arrow(origin, first, ochre, 2.5, 9, context);
+        arrow(origin, second, teal, 2.5, 9, context);
+        arrow(origin, sum, red, 3.5, 11, context);
         return;
       }
-      for (const [start, end, color, lane] of [[origin, joint, ochre, -1], [joint, sum, teal, 1]]) {
-        if (Math.hypot(end[0] - start[0], end[1] - start[1]) < 3) continue;
-        // Separate collinear arrows while marking their true endpoints on the axis.
-        const offset = orthogonal ? 0 : lane * 7;
-        const tail = [start[0], start[1] + offset];
-        const tip = [end[0], end[1] + offset];
-        if (offset) {
-          segment(start, tail, color, 1, [], context);
-          segment(tip, end, color, 1, [], context);
-        }
-        arrow(tail, tip, color, 2.5, 9, context);
-      }
-      arrow(origin, sum, red, 3.5, 11, context);
+      // Nested strokes keep overlapping arrows on the same axis and anchored at the origin.
+      const sameDirection = !orthogonal && (first[0] - origin[0]) * (second[0] - origin[0]) > 0;
+      arrow(origin, sum, red, sameDirection ? 8 : 6, 15, context);
+      arrow(origin, first, ochre, sameDirection ? 5 : 2.5, sameDirection ? 12 : 9, context);
+      arrow(origin, second, teal, 2.5, 9, context);
     }
 
     function dot(position, radius, fill, outline = null) {
@@ -541,7 +535,7 @@
       }
       if (showSum) {
         const sum = project(fieldPoint(x, 'electric'));
-        drawElectricSum(center, project(fieldPoint(x, 'first')), sum, ctx);
+        drawElectricSum(center, project(fieldPoint(x, 'first')), project(fieldPoint(x, 'second')), sum, ctx);
         if (Math.hypot(sum[0] - center[0], sum[1] - center[1]) < 3) {
           dot(center, 4.2, red, '#fff');
           return;
@@ -607,7 +601,7 @@
       return { peak, name: 'Elliptical polarization' };
     }
 
-    function drawTransverse(first, y, z, peak) {
+    function drawTransverse(first, second, y, z, peak) {
       const insetCtx = transverseContext;
       const w = transverseWidth;
       const h = transverseHeight;
@@ -655,7 +649,8 @@
       const origin = [centerX, centerY];
       const sum = point(y, z);
       if (secondEnabled) {
-        drawElectricSum(origin, point(first, 0), sum, insetCtx);
+        const secondTip = orthogonal ? point(0, second) : point(second, 0);
+        drawElectricSum(origin, point(first, 0), secondTip, sum, insetCtx);
       } else {
         arrow(origin, sum, red, 3.5, 11, insetCtx);
       }
@@ -717,7 +712,7 @@
         show('single-magnetic', displayNumber(bz * teslaToNanotesla / speedOfLight));
       }
       show('classification', polarizationState.name + ' · axes in V/m');
-      drawTransverse(first, y, z, polarizationState.peak);
+      drawTransverse(first, second, y, z, polarizationState.peak);
     }
 
     function render() {
