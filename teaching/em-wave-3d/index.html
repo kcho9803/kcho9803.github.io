@@ -78,6 +78,11 @@
     .transverse { margin: 10px 0 0; border-top: 1px solid var(--line); padding-top: 10px; }
     .transverse h2 { margin: 0; }
     #transverse-wave { display: block; margin: 0 auto; max-width: 100%; width: 245px; height: 202px; }
+    .transverse .vector-key { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 12px; font-size: .87rem; font-weight: 650; }
+    .vector-key[aria-hidden="true"] { visibility: hidden; }
+    .vector-one { color: #906117; }
+    .vector-two { color: #167a72; }
+    .vector-sum { color: var(--electric); }
     .transverse .classification { margin: 0; font-size: .87rem; color: var(--muted); }
     .controls {
       display: grid;
@@ -235,7 +240,8 @@
         </div>
         <div class="transverse">
           <h2>Electric field in the <i>yz</i> plane</h2>
-          <canvas id="transverse-wave" role="img" aria-label="Electric-field vector and the path traced by its tip over one cycle. Positive y points right and positive z points up.">The electric field traces a path in the transverse plane.</canvas>
+          <canvas id="transverse-wave" role="img" aria-label="Electric-field vector and the path traced by its tip over one cycle. With two waves, the component vectors are added tip to tail. Positive y points right and positive z points up.">The electric field traces a path in the transverse plane.</canvas>
+          <p class="vector-key" id="vector-key" aria-hidden="true"><span class="vector-one">Wave 1 E₁</span><span class="vector-two">Wave 2 E₂</span><span class="vector-sum">Sum E</span></p>
           <p class="classification" id="classification" aria-live="polite"></p>
         </div>
       </aside>
@@ -356,19 +362,19 @@
       ];
     }
 
-    function segment(from, to, color, lineWidth = 1, dash = []) {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = lineWidth;
-      ctx.lineCap = 'butt';
-      ctx.setLineDash(dash);
-      ctx.beginPath();
-      ctx.moveTo(...from);
-      ctx.lineTo(...to);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    function segment(from, to, color, lineWidth = 1, dash = [], context = ctx) {
+      context.strokeStyle = color;
+      context.lineWidth = lineWidth;
+      context.lineCap = 'butt';
+      context.setLineDash(dash);
+      context.beginPath();
+      context.moveTo(...from);
+      context.lineTo(...to);
+      context.stroke();
+      context.setLineDash([]);
     }
 
-    function arrow(from, to, color, lineWidth = 2, tipSize = 9) {
+    function arrow(from, to, color, lineWidth = 2, tipSize = 9, context = ctx) {
       const dx = to[0] - from[0];
       const dy = to[1] - from[1];
       const length = Math.hypot(dx, dy);
@@ -378,14 +384,38 @@
       const uy = dy / length;
       const baseX = to[0] - ux * head;
       const baseY = to[1] - uy * head;
-      segment(from, [baseX, baseY], color, lineWidth);
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(...to);
-      ctx.lineTo(baseX + uy * head * 0.49, baseY - ux * head * 0.49);
-      ctx.lineTo(baseX - uy * head * 0.49, baseY + ux * head * 0.49);
-      ctx.closePath();
-      ctx.fill();
+      segment(from, [baseX, baseY], color, lineWidth, [], context);
+      context.fillStyle = color;
+      context.beginPath();
+      context.moveTo(...to);
+      context.lineTo(baseX + uy * head * 0.49, baseY - ux * head * 0.49);
+      context.lineTo(baseX - uy * head * 0.49, baseY + ux * head * 0.49);
+      context.closePath();
+      context.fill();
+    }
+
+    function drawElectricSum(origin, joint, sum, context) {
+      const firstLength = Math.hypot(joint[0] - origin[0], joint[1] - origin[1]);
+      const secondLength = Math.hypot(sum[0] - joint[0], sum[1] - joint[1]);
+      if (orthogonal && Math.min(firstLength, secondLength) < 3) {
+        // Keep the wider red arrow visible behind the surviving contributor.
+        arrow(origin, sum, red, 6, 13, context);
+        arrow(origin, sum, firstLength >= 3 ? ochre : teal, 2.5, 9, context);
+        return;
+      }
+      for (const [start, end, color, lane] of [[origin, joint, ochre, -1], [joint, sum, teal, 1]]) {
+        if (Math.hypot(end[0] - start[0], end[1] - start[1]) < 3) continue;
+        // Separate collinear arrows while marking their true endpoints on the axis.
+        const offset = orthogonal ? 0 : lane * 7;
+        const tail = [start[0], start[1] + offset];
+        const tip = [end[0], end[1] + offset];
+        if (offset) {
+          segment(start, tail, color, 1, [], context);
+          segment(tip, end, color, 1, [], context);
+        }
+        arrow(tail, tip, color, 2.5, 9, context);
+      }
+      arrow(origin, sum, red, 3.5, 11, context);
     }
 
     function dot(position, radius, fill, outline = null) {
@@ -502,10 +532,20 @@
       const center = project([x, 0, 0]);
       segment(project([x, -1.22, 0]), project([x, 1.22, 0]), '#83989e', 1.15, [4, 4]);
       segment(project([x, 0, -1.22]), project([x, 0, 1.22]), '#83989e', 1.15, [4, 4]);
-      for (const [field, color] of [['electric', red], ['magnetic', blue]]) {
+      const showSum = secondEnabled && viewInput.value === 'end';
+      const fields = showSum ? [['magnetic', blue]] : [['electric', red], ['magnetic', blue]];
+      for (const [field, color] of fields) {
         const tip = project(fieldPoint(x, field));
         arrow(center, tip, '#fff', 7, 16);
         arrow(center, tip, color, 4.25, 13);
+      }
+      if (showSum) {
+        const sum = project(fieldPoint(x, 'electric'));
+        drawElectricSum(center, project(fieldPoint(x, 'first')), sum, ctx);
+        if (Math.hypot(sum[0] - center[0], sum[1] - center[1]) < 3) {
+          dot(center, 4.2, red, '#fff');
+          return;
+        }
       }
       dot(center, 4.2, '#304850', '#fff');
     }
@@ -567,7 +607,7 @@
       return { peak, name: 'Elliptical polarization' };
     }
 
-    function drawTransverse(y, z, peak) {
+    function drawTransverse(first, y, z, peak) {
       const insetCtx = transverseContext;
       const w = transverseWidth;
       const h = transverseHeight;
@@ -612,25 +652,14 @@
       }
       insetCtx.stroke();
 
-      const [endX, endY] = point(y, z);
-      const vectorLength = Math.hypot(endX - centerX, endY - centerY);
-      insetCtx.strokeStyle = red;
-      insetCtx.fillStyle = red;
-      insetCtx.lineWidth = 3.5;
-      if (vectorLength >= 2) {
-        const angle = Math.atan2(endY - centerY, endX - centerX);
-        const head = Math.min(11, vectorLength / 2);
-        insetCtx.beginPath();
-        insetCtx.moveTo(centerX, centerY);
-        insetCtx.lineTo(endX, endY);
-        insetCtx.stroke();
-        insetCtx.beginPath();
-        insetCtx.moveTo(endX, endY);
-        insetCtx.lineTo(endX - head * Math.cos(angle - 0.5), endY - head * Math.sin(angle - 0.5));
-        insetCtx.lineTo(endX - head * Math.cos(angle + 0.5), endY - head * Math.sin(angle + 0.5));
-        insetCtx.closePath();
-        insetCtx.fill();
+      const origin = [centerX, centerY];
+      const sum = point(y, z);
+      if (secondEnabled) {
+        drawElectricSum(origin, point(first, 0), sum, insetCtx);
+      } else {
+        arrow(origin, sum, red, 3.5, 11, insetCtx);
       }
+      insetCtx.fillStyle = red;
       insetCtx.beginPath();
       insetCtx.arc(centerX, centerY, 3, 0, Math.PI * 2);
       insetCtx.fill();
@@ -688,7 +717,7 @@
         show('single-magnetic', displayNumber(bz * teslaToNanotesla / speedOfLight));
       }
       show('classification', polarizationState.name + ' · axes in V/m');
-      drawTransverse(y, z, polarizationState.peak);
+      drawTransverse(first, y, z, polarizationState.peak);
     }
 
     function render() {
@@ -737,6 +766,7 @@
       secondToggle.checked = secondEnabled;
       element('single-equation').setAttribute('aria-hidden', String(secondEnabled));
       element('second-equation').setAttribute('aria-hidden', String(!secondEnabled));
+      element('vector-key').setAttribute('aria-hidden', String(!secondEnabled));
       element('mixing-options').hidden = !secondEnabled;
       const firstAmplitude = displayNumber(amplitudeOne) + ' V/m';
       const secondAmplitude = displayNumber(amplitudeTwo) + ' V/m';
