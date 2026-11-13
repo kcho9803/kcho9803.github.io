@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore the electric and magnetic fields of a plane wave traveling through vacuum.">
+  <title>Electromagnetic wave in 3D</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18252a;
+      --muted: #4d6066;
+      --line: #d3dddf;
+      --surface: #fff;
+      --background: #f5f7f6;
+      --accent: #17584f;
+      --electric: #b33034;
+      --magnetic: #2159a7;
+      font-family: "Instrument Sans", "Segoe UI", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 280px; color: var(--ink); background: var(--background); }
+    button, select, input { font: inherit; }
+    button, select { touch-action: manipulation; }
+    button, select {
+      color: var(--ink);
+      background: white;
+      border: 1px solid #bfcdd0;
+      border-radius: 8px;
+      min-height: 41px;
+    }
+    button { cursor: pointer; padding: 0 14px; font-weight: 650; }
+    select { width: 100%; min-width: 0; padding: 0 24px 0 10px; }
+    button:hover, select:hover { border-color: var(--accent); }
+    :focus-visible { outline: 3px solid #2579d5; outline-offset: 3px; }
+    main { width: min(1380px, 100%); margin: 0 auto; padding: clamp(15px, 3vw, 38px); }
+    header { margin-bottom: 18px; }
+    h1 { margin: 0 0 5px; font-size: clamp(1.75rem, 3.8vw, 3.1rem); line-height: 1.08; letter-spacing: -.037em; }
+    header p, footer p { color: var(--muted); margin: 0; line-height: 1.48; }
+    header p { font-size: clamp(1rem, 1.5vw, 1.16rem); }
+    .stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.36fr); gap: 13px; align-items: start; }
+    .scene {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    #wave {
+      display: block;
+      width: 100%;
+      height: clamp(390px, 39vw, 520px);
+      touch-action: none;
+      cursor: grab;
+    }
+    #wave:active { cursor: grabbing; }
+    #wave:focus-visible { outline-offset: -4px; }
+    .probe {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 15px 17px 16px;
+    }
+    .probe h2 { margin: 0 0 5px; font-size: 1.05rem; }
+    .probe p { margin: 0 0 4px; line-height: 1.44; }
+    .equation { font-variant-numeric: tabular-nums; font-size: .92rem; }
+    .probe .values { color: var(--muted); font-size: .83rem; }
+    .probe .substitution { color: var(--electric); }
+    .probe .magnetic-value { color: var(--magnetic); }
+    .probe .sum-value { font-weight: 700; margin-top: 6px; }
+    .transverse { margin: 10px 0 0; border-top: 1px solid var(--line); padding-top: 10px; }
+    .transverse h2 { margin: 0; }
+    #transverse-wave { display: block; margin: 0 auto; max-width: 100%; width: 245px; height: 202px; }
+    .transverse .classification { margin: 0; font-size: .87rem; color: var(--muted); }
+    .controls {
+      display: grid;
+      grid-template-columns: auto minmax(160px, 1fr) minmax(195px, 1.1fr) auto auto;
+      gap: 17px 22px;
+      align-items: end;
+      margin-top: 13px;
+      padding: 15px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+    }
+    .controls label, .mixing label { display: block; min-width: 0; font-weight: 650; line-height: 1.2; }
+    .select-label { display: grid !important; gap: 6px; }
+    .button-group { display: flex; gap: 7px; }
+    #play { background: var(--accent); color: white; border-color: var(--accent); min-width: 78px; }
+    #play:hover { background: #0e493f; }
+    .range { display: grid !important; gap: 7px; padding-bottom: 1px; }
+    .range > span { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+    output { color: var(--accent); font-size: .92em; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); min-height: 24px; }
+    .mixing { margin-top: 13px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    .mixing-base { display: grid; grid-template-columns: minmax(200px, 1fr) auto; gap: 16px 24px; align-items: center; }
+    .mixing-base .range { max-width: 330px; }
+    .mixing .toggle { display: flex; align-items: center; gap: 8px; min-height: 38px; }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .mixing-options { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(140px, 1fr) auto auto; gap: 16px 24px; align-items: end; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+    [hidden] { display: none !important; }
+    footer { margin: 13px 2px 0; display: flex; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; font-size: .92rem; }
+    .scene-only { background: white; }
+    .scene-only main { width: 100vw; margin: 0; padding: 0; }
+    .scene-only header, .scene-only .controls, .scene-only .probe, .scene-only .mixing, .scene-only footer { display: none; }
+    .scene-only .stage { display: block; }
+    .scene-only .scene { border: 0; border-radius: 0; }
+    .scene-only #wave { height: 100vh; cursor: default; }
+    @media (max-width: 1020px) {
+      .controls { grid-template-columns: auto minmax(140px, 1fr) minmax(155px, 1fr); }
+      .mixing-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 810px) {
+      body:not(.scene-only) main { display: flex; flex-direction: column; }
+      body:not(.scene-only) .stage { display: contents; }
+      .scene { order: 1; }
+      .controls { order: 2; }
+      .mixing { order: 3; }
+      .probe { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 14px; }
+      .probe { order: 4; margin-top: 13px; }
+      footer { order: 5; }
+      .transverse { margin: 0; border: 0; padding: 0; }
+      #wave { height: clamp(265px, 56vw, 410px); }
+    }
+    @media (max-width: 595px) {
+      .controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 13px 17px; }
+      .button-group { grid-column: span 2; }
+      .controls .range { grid-column: span 2; }
+      .mixing-base, .probe { grid-template-columns: minmax(0, 1fr); }
+      .mixing-options .range { grid-column: span 2; }
+      .transverse { border-top: 1px solid var(--line); padding-top: 10px; }
+    }
+    .teaching-link { display: inline-block; margin-bottom: 10px; color: var(--accent); font-weight: 650; text-underline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <a class="teaching-link" href="../">← Teaching</a>
+      <h1>Electromagnetic wave in 3D</h1>
+      <p>Explore how the electric and magnetic fields oscillate together as a plane wave travels through vacuum.</p>
+    </header>
+    <div class="stage">
+      <div class="scene">
+        <canvas id="wave" tabindex="0" role="img" aria-label="Three-dimensional plane wave. Red shows the resultant electric field and blue shows the resultant magnetic field. Drag, or focus this plot and press the arrow keys, to rotate the view.">The electric and magnetic fields are perpendicular to the direction of travel.</canvas>
+      </div>
+      <aside class="probe" aria-labelledby="probe-title">
+        <div class="equation">
+          <h2 id="probe-title">Equations at the probe</h2>
+          <p>θ = <i>skx</i> − <i>ωt</i></p>
+          <p class="values" id="phase-substitution"><i>x</i> = 0 &nbsp;·&nbsp; θ = −0°</p>
+          <p><b>E</b>₁ = <i>A</i>₁ cos θ ŷ</p>
+          <p id="first-substitution" class="substitution"></p>
+          <div id="second-equation" hidden>
+            <p><b>E</b>₂ = <i>A</i>₂ cos(θ + δ) <span id="second-axis">ẑ</span></p>
+            <p id="second-substitution" class="substitution"></p>
+            <p id="sum-substitution" class="sum-value"></p>
+          </div>
+          <p class="magnetic-value"><i>c</i><b>B</b> = <i>s</i> x̂ × <b>E</b></p>
+          <p class="magnetic-value" id="magnetic-substitution"></p>
+          <p class="values" id="equation-constants"></p>
+          <p class="values" id="angular-frequency"></p>
+        </div>
+        <div class="transverse">
+          <h2>Electric field in the <i>yz</i> plane</h2>
+          <canvas id="transverse-wave" role="img" aria-label="Electric-field vector and the path traced by its tip over one cycle. Positive y points right and positive z points up.">The electric field traces a path in the transverse plane.</canvas>
+          <p class="classification" id="classification" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+    <section class="controls" aria-label="Wave controls">
+      <div class="button-group">
+        <button type="button" id="play">Play</button>
+        <button type="button" id="reset">Reset</button>
+      </div>
+      <label class="range" for="phase">
+        <span>Time phase ωt <output id="phase-value" for="phase">0°</output></span>
+        <input id="phase" type="range" min="0" max="360" step="1" value="0" aria-valuetext="0 degrees into the cycle">
+      </label>
+      <label class="range" for="wavelength">
+        <span>Wavelength <output id="wave-value" for="wavelength">550 nm · 545 THz</output></span>
+        <input id="wavelength" type="range" min="400" max="700" step="5" value="550" aria-valuetext="550 nanometers, 545 terahertz">
+      </label>
+      <label class="select-label" for="direction">Propagation
+        <select id="direction"><option value="1">Toward +x</option><option value="-1">Toward −x</option></select>
+      </label>
+      <label class="select-label" for="view">View
+        <select id="view"><option value="orbit">3D</option><option value="electric">xy plane</option><option value="magnetic">xz plane</option><option value="end">Along x (yz)</option><option value="custom" disabled>Custom</option></select>
+      </label>
+    </section>
+    <section class="mixing" aria-label="Electric-field amplitudes and superposition">
+      <div class="mixing-base">
+        <label class="range" for="amplitude-one"><span>Wave 1 amplitude <output id="amplitude-one-value" for="amplitude-one">1.00 V/m</output></span>
+          <input id="amplitude-one" type="range" min="0" max="2" step=".05" value="1">
+        </label>
+        <label class="toggle"><input id="second-toggle" type="checkbox" aria-controls="mixing-options">Add second wave</label>
+      </div>
+      <div id="mixing-options" class="mixing-options" hidden>
+        <label class="range" for="amplitude-two"><span>Wave 2 amplitude <output id="amplitude-two-value" for="amplitude-two">1.00 V/m</output></span>
+          <input id="amplitude-two" type="range" min="0" max="2" step=".05" value="1">
+        </label>
+        <label class="range" for="relative-phase"><span>Relative phase δ <output id="relative-phase-value" for="relative-phase">90°</output></span>
+          <input id="relative-phase" type="range" min="-180" max="180" step="1" value="90">
+        </label>
+        <label class="select-label">Wave 2 direction
+          <select id="second-orientation"><option value="orthogonal">Orthogonal (ẑ)</option><option value="parallel">Parallel (ŷ)</option></select>
+        </label>
+        <label class="select-label">Example
+          <select id="preset"><option value="custom">Custom</option><option value="linear">Linear</option><option value="circular">Circular</option><option value="elliptical">Elliptical</option><option value="cancel">Cancellation</option></select>
+        </label>
+      </div>
+    </section>
+    <footer>
+      <p>Drag to rotate. The arrows show the total fields at <i>x</i> = 0. The vertical scale uses <i>c</i><b>B</b> so both fields are in V/m.</p>
+      <p>Playback is slowed. In vacuum, <i>c = fλ</i>.</p>
+    </footer>
+  </main>
+  <script>
+    'use strict';
+
+    const element = id => document.getElementById(id);
+    const canvas = element('wave');
+    const ctx = canvas.getContext('2d');
+    const playButton = element('play');
+    const phaseInput = element('phase');
+    const phaseOutput = element('phase-value');
+    const wavelengthInput = element('wavelength');
+    const wavelengthOutput = element('wave-value');
+    const directionInput = element('direction');
+    const viewInput = element('view');
+    const amplitudeOneInput = element('amplitude-one');
+    const amplitudeTwoInput = element('amplitude-two');
+    const secondToggle = element('second-toggle');
+    const relativePhaseInput = element('relative-phase');
+    const orientationInput = element('second-orientation');
+    const presetInput = element('preset');
+    const transverse = element('transverse-wave');
+    const transverseContext = transverse.getContext('2d');
+    const query = new URLSearchParams(location.search);
+    const sceneOnly = query.get('scene') === '1';
+    document.body.classList.toggle('scene-only', sceneOnly);
+
+    const red = '#b33034';
+    const blue = '#2159a7';
+    const ochre = '#906117';
+    const teal = '#167a72';
+    const gray = '#42565d';
+    const gridColor = '#e1e8e9';
+    const speedOfLight = 299792458;
+    const cycleSecondsAt550 = 4.4;
+    const views = {
+      orbit: [-1.22, 0.65],
+      electric: [-Math.PI / 2, Math.PI / 2],
+      magnetic: [-Math.PI / 2, 0],
+      end: [0, 0],
+    };
+    const presets = {
+      linear: [1, 1, 0, 'orthogonal'],
+      circular: [1, 1, 90, 'orthogonal'],
+      elliptical: [1, 0.55, 90, 'orthogonal'],
+      cancel: [1, 1, 180, 'parallel'],
+    };
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const radians = Math.PI / 180;
+    const startPhase = Number(query.get('phase') || 0);
+    const startWavelength = Number(query.get('wavelength') || 550);
+    let phase = Number.isFinite(startPhase) ? clamp(startPhase, 0, 360) : 0;
+    let wavelength = Number.isFinite(startWavelength) ? clamp(startWavelength, 400, 700) : 550;
+    let direction = query.get('direction') === '-1' ? -1 : 1;
+    let amplitudeOne = 1;
+    let amplitudeTwo = 1;
+    let relativePhase = 90;
+    let orthogonal = true;
+    let secondEnabled = false;
+    let [yaw, elevation] = views.orbit;
+    let playing = false;
+    let lastFrame = null;
+    let animationFrame = 0;
+    let drag = null;
+    let width = 0;
+    let height = 0;
+    let scale = 0;
+    let pixelRatio = 1;
+    let transverseWidth = 0;
+    let transverseHeight = 0;
+    const probeX = sceneOnly ? -0.82 : 0;
+
+    function resize() {
+      const box = canvas.getBoundingClientRect();
+      width = box.width;
+      height = box.height;
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 3);
+      canvas.width = Math.round(width * pixelRatio);
+      canvas.height = Math.round(height * pixelRatio);
+      render();
+    }
+
+    function resizeTransverse() {
+      const box = transverse.getBoundingClientRect();
+      transverseWidth = box.width;
+      transverseHeight = box.height;
+      transverse.width = Math.round(transverseWidth * pixelRatio);
+      transverse.height = Math.round(transverseHeight * pixelRatio);
+      updateProbe(polarization());
+    }
+
+    function project(point) {
+      const [x, y, z] = point;
+      const horizontal = -Math.sin(yaw) * x + Math.cos(yaw) * y;
+      const vertical = -Math.sin(elevation) * (Math.cos(yaw) * x + Math.sin(yaw) * y)
+        + Math.cos(elevation) * z;
+      return [width / 2 + scale * horizontal, height * 0.51 - scale * vertical];
+    }
+
+    function segment(from, to, color, lineWidth = 1, dash = []) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'butt';
+      ctx.setLineDash(dash);
+      ctx.beginPath();
+      ctx.moveTo(...from);
+      ctx.lineTo(...to);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function arrow(from, to, color, lineWidth = 2, tipSize = 9) {
+      const dx = to[0] - from[0];
+      const dy = to[1] - from[1];
+      const length = Math.hypot(dx, dy);
+      if (length < 3) return;
+      const head = Math.min(tipSize, length * 0.55);
+      const ux = dx / length;
+      const uy = dy / length;
+      const baseX = to[0] - ux * head;
+      const baseY = to[1] - uy * head;
+      segment(from, [baseX, baseY], color, lineWidth);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(...to);
+      ctx.lineTo(baseX + uy * head * 0.49, baseY - ux * head * 0.49);
+      ctx.lineTo(baseX - uy * head * 0.49, baseY + ux * head * 0.49);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function dot(position, radius, fill, outline = null) {
+      ctx.beginPath();
+      ctx.arc(position[0], position[1], radius, 0, 2 * Math.PI);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      if (outline) {
+        ctx.strokeStyle = outline;
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+      }
+    }
+
+    function label(text, x, y, color = gray, size = 16, weight = 650) {
+      ctx.font = weight + ' ' + size + 'px "Segoe UI", Arial, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 4;
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    function phaseAt(x) {
+      const spatialWavelength = wavelength / 220;
+      return direction * 2 * Math.PI * x / spatialWavelength - phase * radians;
+    }
+
+    function componentsAt(theta) {
+      return [
+        amplitudeOne * Math.cos(theta),
+        secondEnabled ? amplitudeTwo * Math.cos(theta + relativePhase * radians) : 0,
+      ];
+    }
+
+    function totalElectric(first, second) {
+      return orthogonal ? [first, second] : [first + second, 0];
+    }
+
+    function scaledMagnetic(y, z) {
+      return [-direction * z, direction * y];
+    }
+
+    function fieldPoint(x, field) {
+      const [first, second] = componentsAt(phaseAt(x));
+      const [y, z] = totalElectric(first, second);
+      const [by, bz] = scaledMagnetic(y, z);
+      const divisor = sceneOnly ? 1 : secondEnabled ? 2.3 : 1.5;
+      let componentY = y;
+      let componentZ = z;
+      if (field === 'first') [componentY, componentZ] = [first, 0];
+      if (field === 'second') [componentY, componentZ] = orthogonal ? [0, second] : [second, 0];
+      if (field === 'magnetic') [componentY, componentZ] = [by, bz];
+      return [x, componentY / divisor, componentZ / divisor];
+    }
+
+    function drawField(field, color, contributor = false) {
+      ctx.beginPath();
+      for (let index = 0; index <= 320; index++) {
+        const x = -3.55 + 7.1 * index / 320;
+        const point = project(fieldPoint(x, field));
+        if (index === 0) ctx.moveTo(...point);
+        else ctx.lineTo(...point);
+      }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (contributor) ctx.setLineDash([5, 5]);
+      else {
+        ctx.lineWidth = width < 500 ? 5.4 : 6.6;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+      }
+      ctx.lineWidth = contributor ? 2 : width < 500 ? 2.8 : 3.5;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawAxes() {
+      for (const x of [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]) {
+        segment(project([x, -1.15, 0]), project([x, 1.15, 0]), gridColor);
+        segment(project([x, 0, -1.15]), project([x, 0, 1.15]), gridColor);
+      }
+      for (const y of [-1.15, 1.15]) {
+        segment(project([-3.5, y, 0]), project([3.5, y, 0]), gridColor);
+        segment(project([-3.5, 0, y]), project([3.5, 0, y]), gridColor);
+      }
+      segment(project([-3.78, 0, 0]), project([3.78, 0, 0]), '#73878e', 1.45);
+    }
+
+    function drawAxisLabels() {
+      const axes = [
+        { end: [3.9, 0, 0], name: '+x' },
+        { end: [0, 1.53, 0], name: '+y' },
+        { end: [0, 0, 1.53], name: '+z' },
+      ];
+      const origin = project([0, 0, 0]);
+      for (const { end, name } of axes) {
+        const tip = project(end);
+        const dx = tip[0] - origin[0];
+        const dy = tip[1] - origin[1];
+        if (Math.hypot(dx, dy) < 25) continue;
+        arrow(origin, tip, '#60747b', 1.35, 8);
+        const x = tip[0] + (dx < -5 ? -21 : 7);
+        const y = tip[1] + (dy < -4 ? -9 : 10);
+        label(name, x, y, gray, width < 500 ? 12 : 14);
+      }
+    }
+
+    function drawProbe() {
+      const x = probeX;
+      const center = project([x, 0, 0]);
+      segment(project([x, -1.22, 0]), project([x, 1.22, 0]), '#83989e', 1.15, [4, 4]);
+      segment(project([x, 0, -1.22]), project([x, 0, 1.22]), '#83989e', 1.15, [4, 4]);
+      for (const [field, color] of [['electric', red], ['magnetic', blue]]) {
+        const tip = project(fieldPoint(x, field));
+        arrow(center, tip, '#fff', 7, 16);
+        arrow(center, tip, color, 4.25, 13);
+      }
+      dot(center, 4.2, '#304850', '#fff');
+    }
+
+    function drawLegend() {
+      const inset = Math.max(13, Math.min(30, width * 0.028));
+      const size = width < 530 ? 12 : 16;
+      const lineLength = width < 530 ? 20 : 28;
+      const lineY = inset + 6;
+      const electricText = sceneOnly ? 'Electric field  E/E₀' : secondEnabled ? 'Total electric field E' : 'Electric field E';
+      const magneticText = sceneOnly ? 'Magnetic field  B/B₀' : secondEnabled ? 'Total magnetic field cB' : 'Magnetic field cB';
+      segment([inset, lineY], [inset + lineLength, lineY], red, 3.5);
+      label(electricText, inset + lineLength + 8, lineY, red, size);
+      const secondX = inset + lineLength + 8 + ctx.measureText(electricText).width + (width < 530 ? 14 : 33);
+      segment([secondX, lineY], [secondX + lineLength, lineY], blue, 3.5);
+      label(magneticText, secondX + lineLength + 8, lineY, blue, size);
+      if (secondEnabled) {
+        const contributorY = lineY + 22;
+        segment([inset, contributorY], [inset + lineLength, contributorY], ochre, 2, [5, 4]);
+        const waveOneText = 'Wave 1 E₁';
+        label(waveOneText, inset + lineLength + 8, contributorY, ochre, size);
+        const waveTwoX = inset + lineLength + 8 + ctx.measureText(waveOneText).width + (width < 530 ? 14 : 33);
+        segment([waveTwoX, contributorY], [waveTwoX + lineLength, contributorY], teal, 2, [5, 4]);
+        label('Wave 2 E₂', waveTwoX + lineLength + 8, contributorY, teal, size);
+      }
+      const lowerY = height - inset - 4;
+      const travel = direction === 1 ? 'Propagation toward +x' : 'Propagation toward −x';
+      const tip = direction === 1 ? inset + lineLength : inset;
+      const base = direction === 1 ? inset : inset + lineLength;
+      arrow([base, lowerY], [tip, lowerY], gray, 2.2, 8);
+      label(travel, inset + lineLength + 8, lowerY, gray, size);
+      const probeLabel = sceneOnly ? 'Fixed-position probe' : 'Probe at x = 0';
+      ctx.font = '650 ' + size + 'px "Segoe UI", Arial, sans-serif';
+      const probeX = width - inset - ctx.measureText(probeLabel).width;
+      if (width >= 420) {
+        dot([probeX - 13, lowerY], 4.1, '#304850');
+        label(probeLabel, probeX, lowerY, gray, size);
+      }
+    }
+
+    function polarization() {
+      const epsilon = 1e-9;
+      if (!secondEnabled) {
+        return { peak: amplitudeOne, name: amplitudeOne > epsilon ? 'Linear polarization' : 'Zero electric field' };
+      }
+      const cosDelta = Math.cos(relativePhase * radians);
+      const sinDelta = Math.sin(relativePhase * radians);
+      if (!orthogonal) {
+        const peak = Math.hypot(amplitudeOne + amplitudeTwo * cosDelta, amplitudeTwo * sinDelta);
+        return { peak, name: peak > epsilon ? 'Linear polarization' : 'Complete cancellation' };
+      }
+      const firstSquared = amplitudeOne ** 2;
+      const secondSquared = amplitudeTwo ** 2;
+      const difference = Math.hypot(firstSquared - secondSquared, 2 * amplitudeOne * amplitudeTwo * cosDelta);
+      const peak = Math.sqrt((firstSquared + secondSquared + difference) / 2);
+      if (peak <= epsilon) return { peak, name: 'Zero electric field' };
+      if (Math.abs(amplitudeOne * amplitudeTwo * sinDelta) <= epsilon) return { peak, name: 'Linear polarization' };
+      if (difference <= epsilon) return { peak, name: 'Circular polarization' };
+      return { peak, name: 'Elliptical polarization' };
+    }
+
+    function drawTransverse(y, z, peak) {
+      const insetCtx = transverseContext;
+      const w = transverseWidth;
+      const h = transverseHeight;
+      if (!w || !h) return;
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const radius = Math.min(w, h) / 2 - 23;
+      const range = peak > 2.000001 ? 4 : 2;
+      const pixelsPerUnit = radius / range;
+      const point = (componentY, componentZ) => [
+        centerX + componentY * pixelsPerUnit,
+        centerY - componentZ * pixelsPerUnit,
+      ];
+      insetCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      insetCtx.clearRect(0, 0, w, h);
+      insetCtx.lineWidth = 1;
+      insetCtx.strokeStyle = gridColor;
+      insetCtx.strokeRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+      insetCtx.strokeStyle = '#94a7aa';
+      insetCtx.beginPath();
+      insetCtx.moveTo(centerX - radius - 7, centerY);
+      insetCtx.lineTo(centerX + radius + 7, centerY);
+      insetCtx.moveTo(centerX, centerY + radius + 7);
+      insetCtx.lineTo(centerX, centerY - radius - 7);
+      insetCtx.stroke();
+      insetCtx.font = '12px "Segoe UI", Arial, sans-serif';
+      insetCtx.fillStyle = gray;
+      insetCtx.textAlign = 'center';
+      insetCtx.fillText('+z', centerX, centerY - radius - 9);
+      insetCtx.fillText('+y', centerX + radius + 13, centerY - 8);
+      insetCtx.fillText(String(range), centerX + radius, centerY + 16);
+      insetCtx.fillText('−' + range, centerX - radius, centerY + 16);
+      insetCtx.fillText(String(range), centerX - 11, centerY - radius + 12);
+
+      insetCtx.strokeStyle = '#d5878a';
+      insetCtx.lineWidth = 2;
+      insetCtx.beginPath();
+      for (let index = 0; index <= 100; index++) {
+        const coordinates = point(...totalElectric(...componentsAt(2 * Math.PI * index / 100)));
+        if (index === 0) insetCtx.moveTo(...coordinates);
+        else insetCtx.lineTo(...coordinates);
+      }
+      insetCtx.stroke();
+
+      const [endX, endY] = point(y, z);
+      const vectorLength = Math.hypot(endX - centerX, endY - centerY);
+      insetCtx.strokeStyle = red;
+      insetCtx.fillStyle = red;
+      insetCtx.lineWidth = 3.5;
+      if (vectorLength >= 2) {
+        const angle = Math.atan2(endY - centerY, endX - centerX);
+        const head = Math.min(11, vectorLength / 2);
+        insetCtx.beginPath();
+        insetCtx.moveTo(centerX, centerY);
+        insetCtx.lineTo(endX, endY);
+        insetCtx.stroke();
+        insetCtx.beginPath();
+        insetCtx.moveTo(endX, endY);
+        insetCtx.lineTo(endX - head * Math.cos(angle - 0.5), endY - head * Math.sin(angle - 0.5));
+        insetCtx.lineTo(endX - head * Math.cos(angle + 0.5), endY - head * Math.sin(angle + 0.5));
+        insetCtx.closePath();
+        insetCtx.fill();
+      }
+      insetCtx.beginPath();
+      insetCtx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+      insetCtx.fill();
+    }
+
+    function displayNumber(number, digits = 2) {
+      const value = Math.abs(number) < 0.5 * 10 ** -digits ? 0 : number;
+      return value.toFixed(digits).replace('-', '−');
+    }
+
+    function displayAngle(angle) {
+      return displayNumber(angle, 1).replace(/\.0$/, '') + '°';
+    }
+
+    function show(id, value) {
+      const target = element(id);
+      if (target.textContent !== value) target.textContent = value;
+    }
+
+    function updateProbe(polarizationState) {
+      const [first, second] = componentsAt(phaseAt(probeX));
+      const [y, z] = totalElectric(first, second);
+      const [by, bz] = scaledMagnetic(y, z);
+      const theta = displayAngle(-phase);
+      show('phase-substitution', 'x = 0  ·  θ = 0 − ' + displayAngle(phase) + ' = ' + theta);
+      show('first-substitution', 'E₁ = ' + displayNumber(amplitudeOne) + ' cos(' + theta + ') ŷ = ' + displayNumber(first) + ' ŷ V/m');
+      if (secondEnabled) {
+        const axis = orthogonal ? 'ẑ' : 'ŷ';
+        const delta = displayAngle(relativePhase);
+        show('second-axis', axis);
+        show('second-substitution', 'E₂ = ' + displayNumber(amplitudeTwo) + ' cos(' + theta + ' + ' + (relativePhase < 0 ? '(' + delta + ')' : delta) + ') ' + axis + ' = ' + displayNumber(second) + ' ' + axis + ' V/m');
+        show('sum-substitution', 'E = E₁ + E₂ = (' + displayNumber(y) + ', ' + displayNumber(z) + ') V/m');
+      }
+      show('magnetic-substitution', 'cB = (' + displayNumber(by) + ', ' + displayNumber(bz) + ') V/m');
+      const k = 2 * Math.PI / (wavelength / 1000);
+      const omegaInQuadrillions = k * speedOfLight / 1e9;
+      show('equation-constants', 'Components (y, z)  ·  s = ' + (direction === 1 ? '+1' : '−1') + '  ·  k = 2π/λ = ' + displayNumber(k, 1) + ' rad/μm');
+      show('angular-frequency', 'ω = 2πf = ' + displayNumber(omegaInQuadrillions) + ' × 10¹⁵ rad/s');
+      show('classification', polarizationState.name + ' · axes in V/m');
+      drawTransverse(y, z, polarizationState.peak);
+    }
+
+    function render() {
+      scale = Math.min(width / 8.85, height / 4.5);
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, width, height);
+      drawAxes();
+      drawAxisLabels();
+      const polarizationState = polarization();
+      if (secondEnabled && amplitudeOne > 0) drawField('first', ochre, true);
+      if (secondEnabled && amplitudeTwo > 0) drawField('second', teal, true);
+      if (polarizationState.peak > 1e-9) {
+        drawField('electric', red);
+        drawField('magnetic', blue);
+      }
+      drawProbe();
+      drawLegend();
+      if (!sceneOnly) updateProbe(polarizationState);
+    }
+
+    function syncPhase() {
+      const rounded = Math.round(phase);
+      phaseInput.value = rounded;
+      phaseOutput.value = rounded + '°';
+      phaseInput.setAttribute('aria-valuetext', rounded + ' degrees into the cycle');
+    }
+
+    function syncWavelength() {
+      const frequency = Math.round(speedOfLight / (wavelength * 1000));
+      wavelengthInput.value = wavelength;
+      wavelengthOutput.value = wavelength + ' nm · ' + frequency + ' THz';
+      wavelengthInput.setAttribute('aria-valuetext', wavelength + ' nanometers, ' + frequency + ' terahertz');
+    }
+
+    function syncMixing() {
+      amplitudeOneInput.value = amplitudeOne;
+      amplitudeTwoInput.value = amplitudeTwo;
+      relativePhaseInput.value = relativePhase;
+      orientationInput.value = orthogonal ? 'orthogonal' : 'parallel';
+      secondToggle.checked = secondEnabled;
+      element('second-equation').hidden = !secondEnabled;
+      element('mixing-options').hidden = !secondEnabled;
+      const firstAmplitude = displayNumber(amplitudeOne) + ' V/m';
+      const secondAmplitude = displayNumber(amplitudeTwo) + ' V/m';
+      show('amplitude-one-value', firstAmplitude);
+      show('amplitude-two-value', secondAmplitude);
+      show('relative-phase-value', displayAngle(relativePhase));
+      amplitudeOneInput.setAttribute('aria-valuetext', firstAmplitude);
+      amplitudeTwoInput.setAttribute('aria-valuetext', secondAmplitude);
+      relativePhaseInput.setAttribute('aria-valuetext', relativePhase + ' degrees');
+    }
+
+    function applyMixingChange() {
+      amplitudeOne = Number(amplitudeOneInput.value);
+      amplitudeTwo = Number(amplitudeTwoInput.value);
+      relativePhase = Number(relativePhaseInput.value);
+      orthogonal = orientationInput.value === 'orthogonal';
+      presetInput.value = 'custom';
+      syncMixing();
+      render();
+    }
+
+    function animate(timestamp) {
+      if (!playing) return;
+      if (lastFrame !== null) {
+        const elapsed = Math.min(timestamp - lastFrame, 100);
+        const cycleSeconds = cycleSecondsAt550 * wavelength / 550;
+        phase = (phase + elapsed * 360 / (1000 * cycleSeconds)) % 360;
+        syncPhase();
+        render();
+      }
+      lastFrame = timestamp;
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    function setPlaying(enabled) {
+      if (playing === enabled) return;
+      playing = enabled;
+      playButton.textContent = playing ? 'Pause' : 'Play';
+      lastFrame = null;
+      if (playing) animationFrame = requestAnimationFrame(animate);
+      else cancelAnimationFrame(animationFrame);
+    }
+
+    function setPhase(degrees) {
+      setPlaying(false);
+      const requested = Number(degrees);
+      if (!Number.isFinite(requested)) return;
+      phase = clamp(requested, 0, 360);
+      syncPhase();
+      render();
+    }
+
+    function setView(name) {
+      [yaw, elevation] = views[name];
+      viewInput.value = name;
+      render();
+    }
+
+    function orbit(deltaYaw, deltaElevation) {
+      yaw += deltaYaw;
+      elevation = clamp(elevation + deltaElevation, -1.52, 1.52);
+      viewInput.value = 'custom';
+      render();
+    }
+
+    playButton.addEventListener('click', () => setPlaying(!playing));
+    phaseInput.addEventListener('input', event => setPhase(event.target.value));
+    wavelengthInput.addEventListener('input', event => {
+      wavelength = Number(event.target.value);
+      syncWavelength();
+      render();
+    });
+    directionInput.addEventListener('change', event => {
+      direction = Number(event.target.value);
+      render();
+    });
+    viewInput.addEventListener('change', event => setView(event.target.value));
+    for (const input of [amplitudeOneInput, amplitudeTwoInput, relativePhaseInput]) {
+      input.addEventListener('input', applyMixingChange);
+    }
+    orientationInput.addEventListener('change', applyMixingChange);
+    secondToggle.addEventListener('change', () => {
+      secondEnabled = secondToggle.checked;
+      syncMixing();
+      render();
+    });
+    presetInput.addEventListener('change', () => {
+      const preset = presets[presetInput.value];
+      if (!preset) return;
+      const [first, second, angle, orientation] = preset;
+      amplitudeOne = first;
+      amplitudeTwo = second;
+      relativePhase = angle;
+      orthogonal = orientation === 'orthogonal';
+      syncMixing();
+      render();
+    });
+    element('reset').addEventListener('click', () => {
+      wavelength = 550;
+      direction = 1;
+      amplitudeOne = 1;
+      amplitudeTwo = 1;
+      relativePhase = 90;
+      orthogonal = true;
+      secondEnabled = false;
+      presetInput.value = 'custom';
+      directionInput.value = direction;
+      syncWavelength();
+      syncMixing();
+      setPhase(0);
+      setView('orbit');
+    });
+
+    canvas.addEventListener('pointerdown', event => {
+      if (sceneOnly || event.button !== 0 || drag) return;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointermove', event => {
+      if (!drag || event.pointerId !== drag.id) return;
+      orbit((event.clientX - drag.x) * 0.008, (event.clientY - drag.y) * 0.008);
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+    });
+    canvas.addEventListener('lostpointercapture', () => { drag = null; });
+    canvas.addEventListener('keydown', event => {
+      const increments = { ArrowLeft: [-0.13, 0], ArrowRight: [0.13, 0], ArrowUp: [0, 0.13], ArrowDown: [0, -0.13] };
+      if (event.key in increments) {
+        event.preventDefault();
+        orbit(...increments[event.key]);
+      } else if (event.code === 'Space') {
+        event.preventDefault();
+        setPlaying(!playing);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        setView('orbit');
+      }
+    });
+
+    syncPhase();
+    syncWavelength();
+    syncMixing();
+    directionInput.value = direction;
+    window.emWave = Object.freeze({ setPhase });
+    new ResizeObserver(resize).observe(canvas);
+    if (!sceneOnly) new ResizeObserver(resizeTransverse).observe(transverse);
+    resize();
+  </script>
+</body>
+</html>
