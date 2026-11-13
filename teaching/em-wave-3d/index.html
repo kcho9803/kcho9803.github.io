@@ -19,7 +19,7 @@
       font-family: "Instrument Sans", "Segoe UI", Arial, sans-serif;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; min-width: 280px; color: var(--ink); background: var(--background); }
+    body { margin: 0; color: var(--ink); background: var(--background); }
     button, select, input { font: inherit; }
     button, select { touch-action: manipulation; }
     button, select {
@@ -95,9 +95,11 @@
     .button-group { display: flex; gap: 7px; }
     #play { background: var(--accent); color: white; border-color: var(--accent); min-width: 78px; }
     #play:hover { background: #0e493f; }
-    .range { display: grid !important; gap: 7px; padding-bottom: 1px; }
-    .range > span { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+    .range { display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 7px; padding-bottom: 1px; }
+    .range-caption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 6px; min-width: 0; }
+    .range-caption > span { min-width: 0; overflow-wrap: anywhere; }
     output { color: var(--accent); font-size: .92em; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .range output { max-inline-size: 100%; white-space: normal; overflow-wrap: anywhere; }
     #phase-value { flex: 0 0 4ch; text-align: right; }
     input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); min-height: 24px; }
     .mixing { margin-top: 13px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
@@ -163,11 +165,11 @@
             <button type="button" id="reset">Reset</button>
           </div>
           <label class="range" for="phase">
-            <span>Time phase ωt <output id="phase-value" for="phase">0°</output></span>
+            <span class="range-caption"><span>Time phase ωt</span><output id="phase-value" for="phase">0°</output></span>
             <input id="phase" type="range" min="0" max="360" step="1" value="0" aria-valuetext="0 degrees into the cycle">
           </label>
           <label class="range" for="wavelength">
-            <span>Wavelength <output id="wave-value" for="wavelength">550 nm · 545 THz</output></span>
+            <span class="range-caption"><span>Wavelength</span><output id="wave-value" for="wavelength">550 nm · 545 THz</output></span>
             <input id="wavelength" type="range" min="400" max="700" step="5" value="550" aria-valuetext="550 nanometers, 545 terahertz">
           </label>
           <label class="select-label" for="direction">Propagation
@@ -179,16 +181,16 @@
         </section>
         <section class="mixing" aria-label="Electric-field amplitudes and superposition">
           <div class="mixing-base">
-            <label class="range" for="amplitude-one"><span>Wave 1 amplitude <output id="amplitude-one-value" for="amplitude-one">1.00 V/m</output></span>
+            <label class="range" for="amplitude-one"><span class="range-caption"><span>Wave 1 amplitude</span><output id="amplitude-one-value" for="amplitude-one">1.00 V/m</output></span>
               <input id="amplitude-one" type="range" min="0" max="2" step=".05" value="1">
             </label>
             <label class="toggle"><input id="second-toggle" type="checkbox" aria-controls="mixing-options">Add second wave</label>
           </div>
           <div id="mixing-options" class="mixing-options" hidden>
-            <label class="range" for="amplitude-two"><span>Wave 2 amplitude <output id="amplitude-two-value" for="amplitude-two">1.00 V/m</output></span>
+            <label class="range" for="amplitude-two"><span class="range-caption"><span>Wave 2 amplitude</span><output id="amplitude-two-value" for="amplitude-two">1.00 V/m</output></span>
               <input id="amplitude-two" type="range" min="0" max="2" step=".05" value="1">
             </label>
-            <label class="range" for="relative-phase"><span>Relative phase δ <output id="relative-phase-value" for="relative-phase">90°</output></span>
+            <label class="range" for="relative-phase"><span class="range-caption"><span>Relative phase δ</span><output id="relative-phase-value" for="relative-phase">90°</output></span>
               <input id="relative-phase" type="range" min="-180" max="180" step="1" value="90">
             </label>
             <label class="select-label">Wave 2 direction
@@ -300,7 +302,7 @@
     let relativePhase = 90;
     let orthogonal = true;
     let secondEnabled = false;
-    let [yaw, elevation] = views.orbit;
+    let camera = cameraBasis(...views.orbit);
     let playing = false;
     let lastFrame = null;
     let animationFrame = 0;
@@ -332,12 +334,25 @@
       updateProbe(polarization());
     }
 
+    function dotProduct([ax, ay, az], [bx, by, bz]) {
+      return ax * bx + ay * by + az * bz;
+    }
+
+    function crossProduct([ax, ay, az], [bx, by, bz]) {
+      return [ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx];
+    }
+
+    function cameraBasis(yaw, elevation) {
+      const right = [-Math.sin(yaw), Math.cos(yaw), 0];
+      const up = [-Math.sin(elevation) * Math.cos(yaw), -Math.sin(elevation) * Math.sin(yaw), Math.cos(elevation)];
+      return [right, up, crossProduct(right, up)];
+    }
+
     function project(point) {
-      const [x, y, z] = point;
-      const horizontal = -Math.sin(yaw) * x + Math.cos(yaw) * y;
-      const vertical = -Math.sin(elevation) * (Math.cos(yaw) * x + Math.sin(yaw) * y)
-        + Math.cos(elevation) * z;
-      return [width / 2 + scale * horizontal, height * 0.51 - scale * vertical];
+      return [
+        width / 2 + scale * dotProduct(camera[0], point),
+        height * 0.51 - scale * dotProduct(camera[1], point),
+      ];
     }
 
     function segment(from, to, color, lineWidth = 1, dash = []) {
@@ -772,14 +787,45 @@
     }
 
     function setView(name) {
-      [yaw, elevation] = views[name];
+      camera = cameraBasis(...views[name]);
       viewInput.value = name;
       render();
     }
 
-    function orbit(deltaYaw, deltaElevation) {
-      yaw += deltaYaw;
-      elevation = clamp(elevation + deltaElevation, -1.52, 1.52);
+    function trackballPoint(x, y) {
+      const distance = Math.hypot(x, y);
+      // The hyperbolic extension lets a captured drag continue smoothly outside the sphere.
+      const z = distance <= Math.SQRT1_2 ? Math.sqrt(1 - distance * distance) : 0.5 / distance;
+      const length = Math.hypot(x, y, z);
+      return [x / length, y / length, z / length];
+    }
+
+    function pointerOnTrackball(event, rect) {
+      const radius = 0.46 * Math.min(rect.width, rect.height);
+      return trackballPoint(
+        (event.clientX - rect.left - rect.width / 2) / radius,
+        (rect.top + rect.height * 0.51 - event.clientY) / radius,
+      );
+    }
+
+    function rotateTrackball(start, end, basis) {
+      const axis = crossProduct(start, end);
+      const sine = Math.hypot(...axis);
+      if (sine < 1e-10) return basis;
+      const cosine = clamp(dotProduct(start, end), -1, 1);
+      const unitAxis = axis.map(component => component / sine);
+      // Each column is a world axis expressed in screen coordinates. Rotate it with Rodrigues' formula.
+      const columns = basis[0].map((_, index) => {
+        const column = basis.map(row => row[index]);
+        const tangent = crossProduct(unitAxis, column);
+        const parallel = dotProduct(unitAxis, column) * (1 - cosine);
+        return column.map((component, i) => component * cosine + tangent[i] * sine + unitAxis[i] * parallel);
+      });
+      return columns.map((_, i) => columns.map(column => column[i]));
+    }
+
+    function applyTrackball(start, end, basis) {
+      camera = rotateTrackball(start, end, basis);
       viewInput.value = 'custom';
       render();
     }
@@ -834,21 +880,21 @@
 
     canvas.addEventListener('pointerdown', event => {
       if (sceneOnly || event.button !== 0 || drag) return;
-      drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      const rect = canvas.getBoundingClientRect();
+      drag = { id: event.pointerId, rect, start: pointerOnTrackball(event, rect), basis: camera };
       canvas.setPointerCapture(event.pointerId);
     });
     canvas.addEventListener('pointermove', event => {
       if (!drag || event.pointerId !== drag.id) return;
-      orbit((event.clientX - drag.x) * 0.008, (event.clientY - drag.y) * 0.008);
-      drag.x = event.clientX;
-      drag.y = event.clientY;
+      applyTrackball(drag.start, pointerOnTrackball(event, drag.rect), drag.basis);
     });
     canvas.addEventListener('lostpointercapture', () => { drag = null; });
     canvas.addEventListener('keydown', event => {
-      const increments = { ArrowLeft: [-0.13, 0], ArrowRight: [0.13, 0], ArrowUp: [0, 0.13], ArrowDown: [0, -0.13] };
-      if (event.key in increments) {
+      if (sceneOnly) return;
+      const steps = { ArrowLeft: [-0.13, 0], ArrowRight: [0.13, 0], ArrowUp: [0, 0.13], ArrowDown: [0, -0.13] };
+      if (Object.hasOwn(steps, event.key)) {
         event.preventDefault();
-        orbit(...increments[event.key]);
+        applyTrackball([0, 0, 1], trackballPoint(...steps[event.key]), camera);
       } else if (event.code === 'Space') {
         event.preventDefault();
         setPlaying(!playing);
