@@ -397,17 +397,12 @@
     function drawElectricSum(origin, first, second, sum, context) {
       const firstLength = Math.hypot(first[0] - origin[0], first[1] - origin[1]);
       const secondLength = Math.hypot(second[0] - origin[0], second[1] - origin[1]);
-      const distinct = orthogonal && Math.min(firstLength, secondLength) >= 3;
-      if (distinct) {
-        segment(first, sum, teal, 1.5, [4, 3], context);
-        segment(second, sum, ochre, 1.5, [4, 3], context);
+      if (orthogonal && Math.min(firstLength, secondLength) >= 3) {
+        segment(first, sum, ochre, 1.5, [4, 3], context);
+        segment(second, sum, teal, 1.5, [4, 3], context);
       }
-      // Leave visible edges on coincident components while always painting the red sum last.
-      const sharedDirection = !orthogonal && (first[0] - origin[0]) * (second[0] - origin[0]) > 0;
-      const firstWidth = distinct ? 2.5 : sharedDirection ? 8 : 5.5;
-      const secondWidth = distinct ? 2.5 : 5.5;
-      arrow(origin, first, ochre, firstWidth, distinct ? 9 : sharedDirection ? 16 : 13, context);
-      arrow(origin, second, teal, secondWidth, distinct ? 9 : 13, context);
+      arrow(origin, first, ochre, 2.5, 9, context);
+      arrow(origin, second, teal, 2.5, 9, context);
       arrow(origin, sum, red, 3.5, 11, context);
     }
 
