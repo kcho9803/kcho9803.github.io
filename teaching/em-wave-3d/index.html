@@ -397,19 +397,18 @@
     function drawElectricSum(origin, first, second, sum, context) {
       const firstLength = Math.hypot(first[0] - origin[0], first[1] - origin[1]);
       const secondLength = Math.hypot(second[0] - origin[0], second[1] - origin[1]);
-      if (orthogonal && Math.min(firstLength, secondLength) >= 3) {
+      const distinct = orthogonal && Math.min(firstLength, secondLength) >= 3;
+      if (distinct) {
         segment(first, sum, teal, 1.5, [4, 3], context);
         segment(second, sum, ochre, 1.5, [4, 3], context);
-        arrow(origin, first, ochre, 2.5, 9, context);
-        arrow(origin, second, teal, 2.5, 9, context);
-        arrow(origin, sum, red, 3.5, 11, context);
-        return;
       }
-      // Nested strokes keep overlapping arrows on the same axis and anchored at the origin.
-      const sameDirection = !orthogonal && (first[0] - origin[0]) * (second[0] - origin[0]) > 0;
-      arrow(origin, sum, red, sameDirection ? 8 : 6, 15, context);
-      arrow(origin, first, ochre, sameDirection ? 5 : 2.5, sameDirection ? 12 : 9, context);
-      arrow(origin, second, teal, 2.5, 9, context);
+      // Leave visible edges on coincident components while always painting the red sum last.
+      const sharedDirection = !orthogonal && (first[0] - origin[0]) * (second[0] - origin[0]) > 0;
+      const firstWidth = distinct ? 2.5 : sharedDirection ? 8 : 5.5;
+      const secondWidth = distinct ? 2.5 : 5.5;
+      arrow(origin, first, ochre, firstWidth, distinct ? 9 : sharedDirection ? 16 : 13, context);
+      arrow(origin, second, teal, secondWidth, distinct ? 9 : 13, context);
+      arrow(origin, sum, red, 3.5, 11, context);
     }
 
     function dot(position, radius, fill, outline = null) {
