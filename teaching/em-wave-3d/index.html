@@ -56,6 +56,7 @@
     #wave:active { cursor: grabbing; }
     #wave:focus-visible { outline-offset: -4px; }
     .probe {
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: 14px;
       background: #fff;
@@ -63,18 +64,24 @@
     }
     .probe h2 { margin: 0 0 5px; font-size: 1.05rem; }
     .probe p { margin: 0 0 4px; line-height: 1.44; }
-    .equation { font-variant-numeric: tabular-nums; font-size: .92rem; }
+    .equation { min-width: 0; font-variant-numeric: tabular-nums; }
+    .equation-modes { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .equation-mode { grid-area: 1 / 1; min-width: 0; }
+    .equation-mode[aria-hidden="true"] { visibility: hidden; }
+    .math-row { display: flex; align-items: center; min-height: 2.05rem; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+    .math-row math { flex: none; font-family: "Cambria Math", math; font-size: .97rem; margin: 0; }
+    .math-row.values math { font-size: .88rem; }
+    .probe-label { font-size: .85rem; margin: 5px 0 1px; }
     .probe .values { color: var(--muted); font-size: .83rem; }
-    .probe .substitution { color: var(--electric); }
+    .probe .electric-value { color: var(--electric); }
     .probe .magnetic-value { color: var(--magnetic); }
-    .probe .sum-value { font-weight: 700; margin-top: 6px; }
     .transverse { margin: 10px 0 0; border-top: 1px solid var(--line); padding-top: 10px; }
     .transverse h2 { margin: 0; }
     #transverse-wave { display: block; margin: 0 auto; max-width: 100%; width: 245px; height: 202px; }
     .transverse .classification { margin: 0; font-size: .87rem; color: var(--muted); }
     .controls {
       display: grid;
-      grid-template-columns: auto minmax(160px, 1fr) minmax(195px, 1.1fr) auto auto;
+      grid-template-columns: auto minmax(120px, 1fr) minmax(165px, 1.1fr) auto auto;
       gap: 17px 22px;
       align-items: end;
       margin-top: 13px;
@@ -91,6 +98,7 @@
     .range { display: grid !important; gap: 7px; padding-bottom: 1px; }
     .range > span { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
     output { color: var(--accent); font-size: .92em; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #phase-value { flex: 0 0 4ch; text-align: right; }
     input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); min-height: 24px; }
     .mixing { margin-top: 13px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
     .mixing-base { display: grid; grid-template-columns: minmax(200px, 1fr) auto; gap: 16px 24px; align-items: center; }
@@ -106,13 +114,13 @@
     .scene-only .stage { display: block; }
     .scene-only .scene { border: 0; border-radius: 0; }
     .scene-only #wave { height: 100vh; cursor: default; }
-    @media (max-width: 1020px) {
+    @media (max-width: 1200px) {
       .controls { grid-template-columns: auto minmax(140px, 1fr) minmax(155px, 1fr); }
       .mixing-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 810px) {
       body:not(.scene-only) main { display: flex; flex-direction: column; }
-      body:not(.scene-only) .stage { display: contents; }
+      body:not(.scene-only) .stage, body:not(.scene-only) .scene-column { display: contents; }
       .scene { order: 1; }
       .controls { order: 2; }
       .mixing { order: 3; }
@@ -122,13 +130,17 @@
       .transverse { margin: 0; border: 0; padding: 0; }
       #wave { height: clamp(265px, 56vw, 410px); }
     }
-    @media (max-width: 595px) {
+    @media (max-width: 640px) {
       .controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 13px 17px; }
       .button-group { grid-column: span 2; }
       .controls .range { grid-column: span 2; }
       .mixing-base, .probe { grid-template-columns: minmax(0, 1fr); }
       .mixing-options .range { grid-column: span 2; }
       .transverse { border-top: 1px solid var(--line); padding-top: 10px; }
+    }
+    @media (max-width: 335px) {
+      .math-row math { font-size: .8rem; }
+      .math-row.values math { font-size: .78rem; }
     }
     .teaching-link { display: inline-block; margin-bottom: 10px; color: var(--accent); font-weight: 650; text-underline-offset: 3px; }
   </style>
@@ -141,25 +153,82 @@
       <p>Explore how the electric and magnetic fields oscillate together as a plane wave travels through vacuum.</p>
     </header>
     <div class="stage">
-      <div class="scene">
-        <canvas id="wave" tabindex="0" role="img" aria-label="Three-dimensional plane wave. Red shows the resultant electric field and blue shows the resultant magnetic field. Drag, or focus this plot and press the arrow keys, to rotate the view.">The electric and magnetic fields are perpendicular to the direction of travel.</canvas>
+      <div class="scene-column">
+        <div class="scene">
+          <canvas id="wave" tabindex="0" role="img" aria-label="Three-dimensional plane wave. Red shows the resultant electric field and blue shows the resultant magnetic field. Drag, or focus this plot and press the arrow keys, to rotate the view.">The electric and magnetic fields are perpendicular to the direction of travel.</canvas>
+        </div>
+        <section class="controls" aria-label="Wave controls">
+          <div class="button-group">
+            <button type="button" id="play">Play</button>
+            <button type="button" id="reset">Reset</button>
+          </div>
+          <label class="range" for="phase">
+            <span>Time phase ωt <output id="phase-value" for="phase">0°</output></span>
+            <input id="phase" type="range" min="0" max="360" step="1" value="0" aria-valuetext="0 degrees into the cycle">
+          </label>
+          <label class="range" for="wavelength">
+            <span>Wavelength <output id="wave-value" for="wavelength">550 nm · 545 THz</output></span>
+            <input id="wavelength" type="range" min="400" max="700" step="5" value="550" aria-valuetext="550 nanometers, 545 terahertz">
+          </label>
+          <label class="select-label" for="direction">Propagation
+            <select id="direction"><option value="1">Toward +x</option><option value="-1">Toward −x</option></select>
+          </label>
+          <label class="select-label" for="view">View
+            <select id="view"><option value="orbit">3D</option><option value="electric">xy plane</option><option value="magnetic">xz plane</option><option value="end">Along x (yz)</option><option value="custom" disabled>Custom</option></select>
+          </label>
+        </section>
+        <section class="mixing" aria-label="Electric-field amplitudes and superposition">
+          <div class="mixing-base">
+            <label class="range" for="amplitude-one"><span>Wave 1 amplitude <output id="amplitude-one-value" for="amplitude-one">1.00 V/m</output></span>
+              <input id="amplitude-one" type="range" min="0" max="2" step=".05" value="1">
+            </label>
+            <label class="toggle"><input id="second-toggle" type="checkbox" aria-controls="mixing-options">Add second wave</label>
+          </div>
+          <div id="mixing-options" class="mixing-options" hidden>
+            <label class="range" for="amplitude-two"><span>Wave 2 amplitude <output id="amplitude-two-value" for="amplitude-two">1.00 V/m</output></span>
+              <input id="amplitude-two" type="range" min="0" max="2" step=".05" value="1">
+            </label>
+            <label class="range" for="relative-phase"><span>Relative phase δ <output id="relative-phase-value" for="relative-phase">90°</output></span>
+              <input id="relative-phase" type="range" min="-180" max="180" step="1" value="90">
+            </label>
+            <label class="select-label">Wave 2 direction
+              <select id="second-orientation"><option value="orthogonal">Orthogonal (ẑ)</option><option value="parallel">Parallel (ŷ)</option></select>
+            </label>
+            <label class="select-label">Example
+              <select id="preset"><option value="custom">Custom</option><option value="linear">Linear</option><option value="circular">Circular</option><option value="elliptical">Elliptical</option><option value="cancel">Cancellation</option></select>
+            </label>
+          </div>
+        </section>
       </div>
       <aside class="probe" aria-labelledby="probe-title">
         <div class="equation">
-          <h2 id="probe-title">Equations at the probe</h2>
-          <p>θ = <i>skx</i> − <i>ωt</i></p>
-          <p class="values" id="phase-substitution"><i>x</i> = 0 &nbsp;·&nbsp; θ = −0°</p>
-          <p><b>E</b>₁ = <i>A</i>₁ cos θ ŷ</p>
-          <p id="first-substitution" class="substitution"></p>
-          <div id="second-equation" hidden>
-            <p><b>E</b>₂ = <i>A</i>₂ cos(θ + δ) <span id="second-axis">ẑ</span></p>
-            <p id="second-substitution" class="substitution"></p>
-            <p id="sum-substitution" class="sum-value"></p>
+          <h2 id="probe-title">Wave equations</h2>
+          <div class="equation-modes">
+            <div id="single-equation" class="equation-mode">
+          <div class="math-row electric-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>E</mi><mi>y</mi></msub><mo>=</mo><msub><mi>E</mi><mi>max</mi><mo>⁡</mo></msub><mi>cos</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mn>2</mn><mi>π</mi><mrow><mo fence="true">(</mo><mfrac><mi>t</mi><mi>T</mi></mfrac><mo id="electric-travel-sign">−</mo><mfrac><mi>x</mi><mi>λ</mi></mfrac><mo fence="true">)</mo></mrow><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_y=E_{\max}\cos\left(2\pi\left(\frac{t}{T}\pm\frac{x}{\lambda}\right)\right)</annotation></semantics></math></div>
+          <div class="math-row magnetic-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>B</mi><mi>z</mi></msub><mo>=</mo><mo id="magnetic-prefix"></mo><msub><mi>B</mi><mi>max</mi><mo>⁡</mo></msub><mi>cos</mi><mo>⁡</mo><mrow><mo fence="true">(</mo><mn>2</mn><mi>π</mi><mrow><mo fence="true">(</mo><mfrac><mi>t</mi><mi>T</mi></mfrac><mo id="magnetic-travel-sign">−</mo><mfrac><mi>x</mi><mi>λ</mi></mfrac><mo fence="true">)</mo></mrow><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">B_z=\mp B_{\max}\cos\left(2\pi\left(\frac{t}{T}\pm\frac{x}{\lambda}\right)\right)</annotation></semantics></math></div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>E</mi><mi>max</mi><mo>⁡</mo></msub><mo>=</mo><mi>c</mi><msub><mi>B</mi><mi>max</mi><mo>⁡</mo></msub><mtext> </mtext><mo separator="true">,</mo><mspace width="1em"/><mi>T</mi><mo>=</mo><mfrac><mn>1</mn><mi>f</mi></mfrac></mrow><annotation encoding="application/x-tex">E_{\max}=cB_{\max}\,,\quad T=\frac{1}{f}</annotation></semantics></math></div>
+              <h3 class="probe-label">At the probe</h3>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mspace width="1em"/><mfrac><mi>t</mi><mi>T</mi></mfrac><mo>=</mo><mn id="single-time">0.000</mn><mo separator="true">,</mo><mspace width="1em"/><mi>θ</mi><mo>=</mo><msup><mn id="single-theta">0</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">x=0,\quad \frac{t}{T}=0.000,\quad \theta=0^\circ</annotation></semantics></math></div>
+          <div class="math-row electric-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>E</mi><mi>y</mi></msub><mo>=</mo><mn id="single-amplitude">1.00</mn><mi>cos</mi><mo>⁡</mo><mo stretchy="false">(</mo><msup><mn id="single-electric-phase">0</mn><mo>∘</mo></msup><mo stretchy="false">)</mo><mo>=</mo><mn id="single-electric">1.00</mn><mtext> </mtext><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">m</mi></mrow></mrow><annotation encoding="application/x-tex">E_y=1.00\cos(0^\circ)=1.00\,\mathrm{V/m}</annotation></semantics></math></div>
+          <div class="math-row magnetic-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>B</mi><mi>z</mi></msub><mo>=</mo><mn id="single-magnetic-amplitude">3.34</mn><mi>cos</mi><mo>⁡</mo><mo stretchy="false">(</mo><msup><mn id="single-magnetic-phase">0</mn><mo>∘</mo></msup><mo stretchy="false">)</mo><mo>=</mo><mn id="single-magnetic">3.34</mn><mtext> </mtext><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">T</mi></mrow></mrow><annotation encoding="application/x-tex">B_z=3.34\cos(0^\circ)=3.34\,\mathrm{nT}</annotation></semantics></math></div>
+              <p class="values" id="single-direction-note">The minus sign in the phase gives propagation toward +x.</p>
           </div>
-          <p class="magnetic-value"><i>c</i><b>B</b> = <i>s</i> x̂ × <b>E</b></p>
-          <p class="magnetic-value" id="magnetic-substitution"></p>
-          <p class="values" id="equation-constants"></p>
-          <p class="values" id="angular-frequency"></p>
+            <div id="second-equation" class="equation-mode" aria-hidden="true">
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>2</mn><mi>π</mi><mrow><mo fence="true">(</mo><mfrac><mi>t</mi><mi>T</mi></mfrac><mo id="mixing-travel-sign">−</mo><mfrac><mi>x</mi><mi>λ</mi></mfrac><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta=2\pi\left(\frac{t}{T}\pm\frac{x}{\lambda}\right)</annotation></semantics></math></div>
+          <div class="math-row electric-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mn>1</mn></msub><mo>=</mo><msub><mi>E</mi><mrow><mn>1</mn><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mi>cos</mi><mo>⁡</mo><mi>θ</mi><mtext> </mtext><mover accent="true"><mi>y</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec E_1=E_{1,\max}\cos\theta\,\hat y</annotation></semantics></math></div>
+          <div class="math-row electric-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mn>2</mn></msub><mo>=</mo><msub><mi>E</mi><mrow><mn>2</mn><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mi>cos</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>θ</mi><mo>−</mo><mi>δ</mi><mo stretchy="false">)</mo><mtext> </mtext><mover accent="true"><mi id="second-axis">z</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\vec E_2=E_{2,\max}\cos(\theta-\delta)\,\hat z</annotation></semantics></math></div>
+              <h3 class="probe-label">At the probe</h3>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mspace width="1em"/><mfrac><mi>t</mi><mi>T</mi></mfrac><mo>=</mo><mn id="mixing-time">0.000</mn><mo separator="true">,</mo><mspace width="1em"/><mi>θ</mi><mo>=</mo><msup><mn id="mixing-theta">0</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">x=0,\quad \frac{t}{T}=0.000,\quad \theta=0^\circ</annotation></semantics></math></div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>E</mi><mrow><mn>1</mn><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>=</mo><mn id="mixing-amplitude-one">1.00</mn><mo separator="true">,</mo><mspace width="1em"/><msub><mi>E</mi><mrow><mn>2</mn><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>=</mo><mn id="mixing-amplitude-two">1.00</mn><mtext> </mtext><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">m</mi></mrow></mrow><annotation encoding="application/x-tex">E_{1,\max}=1.00,\quad E_{2,\max}=1.00\,\mathrm{V/m}</annotation></semantics></math></div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>δ</mi><mo>=</mo><msup><mn id="mixing-delta">90</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\delta=90^\circ</annotation></semantics></math></div>
+          <div class="math-row electric-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mo>=</mo><msub><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mn>1</mn></msub><mo>+</mo><msub><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mn>2</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn id="sum-y">1.00</mn><mo separator="true">,</mo><mn id="sum-z">0.00</mn><mo stretchy="false">)</mo><mtext> </mtext><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">m</mi></mrow></mrow><annotation encoding="application/x-tex">\vec E=\vec E_1+\vec E_2=(1.00,0.00)\,\mathrm{V/m}</annotation></semantics></math></div>
+          <div class="math-row magnetic-value"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>c</mi><mover accent="true"><mi>B</mi><mo>⃗</mo></mover><mo>=</mo><mi>s</mi><mover accent="true"><mi>x</mi><mo>^</mo></mover><mo>×</mo><mover accent="true"><mi>E</mi><mo>⃗</mo></mover><mo>=</mo><mo stretchy="false">(</mo><mn id="magnetic-y">0.00</mn><mo separator="true">,</mo><mn id="magnetic-z">1.00</mn><mo stretchy="false">)</mo><mtext> </mtext><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">m</mi></mrow></mrow><annotation encoding="application/x-tex">c\vec B=s\hat x\times\vec E=(0.00,1.00)\,\mathrm{V/m}</annotation></semantics></math></div>
+              <p class="values">Components (y, z). The direction sign <var>s</var> is <span id="direction-sign">+1</span>.</p>
+            </div>
+          </div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>T</mi><mo>=</mo><mn id="period-value">1.83</mn><mtext> </mtext><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">s</mi></mrow><mtext> </mtext><mo separator="true">,</mo><mspace width="1em"/><mi>ω</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><mi>T</mi></mfrac></mrow><annotation encoding="application/x-tex">T=1.83\,\mathrm{fs}\,,\quad \omega=\frac{2\pi}{T}</annotation></semantics></math></div>
+          <div class="math-row values"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>ω</mi><mo>=</mo><mn id="angular-frequency-value">3.42</mn><mo>×</mo><msup><mn>10</mn><mn>15</mn></msup><mtext> </mtext><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">/</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">\omega=3.42\times10^{15}\,\mathrm{rad/s}</annotation></semantics></math></div>
         </div>
         <div class="transverse">
           <h2>Electric field in the <i>yz</i> plane</h2>
@@ -168,48 +237,6 @@
         </div>
       </aside>
     </div>
-    <section class="controls" aria-label="Wave controls">
-      <div class="button-group">
-        <button type="button" id="play">Play</button>
-        <button type="button" id="reset">Reset</button>
-      </div>
-      <label class="range" for="phase">
-        <span>Time phase ωt <output id="phase-value" for="phase">0°</output></span>
-        <input id="phase" type="range" min="0" max="360" step="1" value="0" aria-valuetext="0 degrees into the cycle">
-      </label>
-      <label class="range" for="wavelength">
-        <span>Wavelength <output id="wave-value" for="wavelength">550 nm · 545 THz</output></span>
-        <input id="wavelength" type="range" min="400" max="700" step="5" value="550" aria-valuetext="550 nanometers, 545 terahertz">
-      </label>
-      <label class="select-label" for="direction">Propagation
-        <select id="direction"><option value="1">Toward +x</option><option value="-1">Toward −x</option></select>
-      </label>
-      <label class="select-label" for="view">View
-        <select id="view"><option value="orbit">3D</option><option value="electric">xy plane</option><option value="magnetic">xz plane</option><option value="end">Along x (yz)</option><option value="custom" disabled>Custom</option></select>
-      </label>
-    </section>
-    <section class="mixing" aria-label="Electric-field amplitudes and superposition">
-      <div class="mixing-base">
-        <label class="range" for="amplitude-one"><span>Wave 1 amplitude <output id="amplitude-one-value" for="amplitude-one">1.00 V/m</output></span>
-          <input id="amplitude-one" type="range" min="0" max="2" step=".05" value="1">
-        </label>
-        <label class="toggle"><input id="second-toggle" type="checkbox" aria-controls="mixing-options">Add second wave</label>
-      </div>
-      <div id="mixing-options" class="mixing-options" hidden>
-        <label class="range" for="amplitude-two"><span>Wave 2 amplitude <output id="amplitude-two-value" for="amplitude-two">1.00 V/m</output></span>
-          <input id="amplitude-two" type="range" min="0" max="2" step=".05" value="1">
-        </label>
-        <label class="range" for="relative-phase"><span>Relative phase δ <output id="relative-phase-value" for="relative-phase">90°</output></span>
-          <input id="relative-phase" type="range" min="-180" max="180" step="1" value="90">
-        </label>
-        <label class="select-label">Wave 2 direction
-          <select id="second-orientation"><option value="orthogonal">Orthogonal (ẑ)</option><option value="parallel">Parallel (ŷ)</option></select>
-        </label>
-        <label class="select-label">Example
-          <select id="preset"><option value="custom">Custom</option><option value="linear">Linear</option><option value="circular">Circular</option><option value="elliptical">Elliptical</option><option value="cancel">Cancellation</option></select>
-        </label>
-      </div>
-    </section>
     <footer>
       <p>Drag to rotate. The arrows show the total fields at <i>x</i> = 0. The vertical scale uses <i>c</i><b>B</b> so both fields are in V/m.</p>
       <p>Playback is slowed. In vacuum, <i>c = fλ</i>.</p>
@@ -611,21 +638,42 @@
       const [first, second] = componentsAt(phaseAt(probeX));
       const [y, z] = totalElectric(first, second);
       const [by, bz] = scaledMagnetic(y, z);
-      const theta = displayAngle(-phase);
-      show('phase-substitution', 'x = 0  ·  θ = 0 − ' + displayAngle(phase) + ' = ' + theta);
-      show('first-substitution', 'E₁ = ' + displayNumber(amplitudeOne) + ' cos(' + theta + ') ŷ = ' + displayNumber(first) + ' ŷ V/m');
+      const cycle = displayNumber(phase / 360, 3);
+      const theta = displayAngle(phase).slice(0, -1);
+      const travelSign = direction === 1 ? '−' : '+';
       if (secondEnabled) {
-        const axis = orthogonal ? 'ẑ' : 'ŷ';
-        const delta = displayAngle(relativePhase);
-        show('second-axis', axis);
-        show('second-substitution', 'E₂ = ' + displayNumber(amplitudeTwo) + ' cos(' + theta + ' + ' + (relativePhase < 0 ? '(' + delta + ')' : delta) + ') ' + axis + ' = ' + displayNumber(second) + ' ' + axis + ' V/m');
-        show('sum-substitution', 'E = E₁ + E₂ = (' + displayNumber(y) + ', ' + displayNumber(z) + ') V/m');
+        show('mixing-travel-sign', travelSign);
+        show('mixing-time', cycle);
+        show('mixing-theta', theta);
+        show('second-axis', orthogonal ? 'z' : 'y');
+        show('mixing-amplitude-one', displayNumber(amplitudeOne));
+        show('mixing-amplitude-two', displayNumber(amplitudeTwo));
+        show('mixing-delta', displayAngle(relativePhase).slice(0, -1));
+        show('sum-y', displayNumber(y));
+        show('sum-z', displayNumber(z));
+        show('magnetic-y', displayNumber(by));
+        show('magnetic-z', displayNumber(bz));
+        show('direction-sign', direction === 1 ? '+1' : '−1');
+      } else {
+        const teslaToNanotesla = 1e9;
+        show('electric-travel-sign', travelSign);
+        show('magnetic-travel-sign', travelSign);
+        show('magnetic-prefix', direction === 1 ? '' : '−');
+        show('single-direction-note', direction === 1
+          ? 'The minus sign in the phase gives propagation toward +x.'
+          : 'The plus sign in the phase gives propagation toward −x. The magnetic field reverses direction.');
+        show('single-time', cycle);
+        show('single-theta', theta);
+        show('single-amplitude', displayNumber(amplitudeOne));
+        show('single-electric-phase', theta);
+        show('single-electric', displayNumber(first));
+        show('single-magnetic-amplitude', displayNumber(direction * amplitudeOne * teslaToNanotesla / speedOfLight));
+        show('single-magnetic-phase', theta);
+        show('single-magnetic', displayNumber(bz * teslaToNanotesla / speedOfLight));
       }
-      show('magnetic-substitution', 'cB = (' + displayNumber(by) + ', ' + displayNumber(bz) + ') V/m');
-      const k = 2 * Math.PI / (wavelength / 1000);
-      const omegaInQuadrillions = k * speedOfLight / 1e9;
-      show('equation-constants', 'Components (y, z)  ·  s = ' + (direction === 1 ? '+1' : '−1') + '  ·  k = 2π/λ = ' + displayNumber(k, 1) + ' rad/μm');
-      show('angular-frequency', 'ω = 2πf = ' + displayNumber(omegaInQuadrillions) + ' × 10¹⁵ rad/s');
+      const periodInFemtoseconds = wavelength * 1e6 / speedOfLight;
+      show('period-value', displayNumber(periodInFemtoseconds));
+      show('angular-frequency-value', displayNumber(2 * Math.PI / periodInFemtoseconds));
       show('classification', polarizationState.name + ' · axes in V/m');
       drawTransverse(y, z, polarizationState.peak);
     }
@@ -669,7 +717,8 @@
       relativePhaseInput.value = relativePhase;
       orientationInput.value = orthogonal ? 'orthogonal' : 'parallel';
       secondToggle.checked = secondEnabled;
-      element('second-equation').hidden = !secondEnabled;
+      element('single-equation').setAttribute('aria-hidden', String(secondEnabled));
+      element('second-equation').setAttribute('aria-hidden', String(!secondEnabled));
       element('mixing-options').hidden = !secondEnabled;
       const firstAmplitude = displayNumber(amplitudeOne) + ' V/m';
       const secondAmplitude = displayNumber(amplitudeTwo) + ' V/m';
