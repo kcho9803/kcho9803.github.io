@@ -49,6 +49,8 @@
   --hero-chain: #625333;
   --hero-defect: #45412e;
   --hero-pulse: #76623b;
+  --lattice-still: #{url('../video/lattice-still-light.webp')};
+  --lattice-preview: #{url('../video/lattice-preview-light.webp')};
 }
 
 @mixin site-dark-colors {
@@ -76,6 +78,8 @@
   --hero-chain: #c4b28c;
   --hero-defect: #e5e8dd;
   --hero-pulse: #d1be91;
+  --lattice-still: #{url('../video/lattice-still-dark.webp')};
+  --lattice-preview: #{url('../video/lattice-preview-dark.webp')};
   --site-syntax-literal: #d9b998;
   --site-syntax-string: #bfca9e;
   --site-syntax-type: #b9c9b0;
@@ -326,18 +330,33 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   aspect-ratio: 1;
 }
 
-.research-lattice {
+.research-lattice,
+.research-lattice-fallback {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.research-lattice {
   background-color: var(--hero-grid-background);
   box-shadow: -1px 0 var(--hero-rule);
   background-image: linear-gradient(to right, var(--hero-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--hero-grid-line) 1px, transparent 1px);
   background-size: var(--lattice-cell, 6.25%) var(--lattice-cell, 6.25%);
   background-position: var(--lattice-offset, 3.333%) var(--lattice-offset, 3.333%);
+}
+
+.research-lattice-fallback {
+  pointer-events: none;
+  background: var(--lattice-still) center / contain no-repeat;
+}
+
+.research-lattice-fallback[hidden] { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .research-lattice-fallback[data-animated] { background-image: var(--lattice-preview); }
 }
 
 @supports (container-type: size) and (height: 1cqh) {
@@ -352,7 +371,8 @@ a:focus-visible, button:focus-visible, select:focus-visible {
     container-type: size;
   }
 
-  .research-lattice {
+  .research-lattice,
+  .research-lattice-fallback {
     inset-inline-start: auto;
     margin-block: auto;
     width: min(100cqh, 100cqw);

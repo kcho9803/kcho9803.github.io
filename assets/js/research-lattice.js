@@ -22,9 +22,10 @@ function mountLattice(canvas) {
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
   const liveSource = loopback && canvas.dataset.liveLattice;
   if (!liveSource) {
-    void import('./lattice-recording.js?v=4').then(({ playLatticeRecording }) => {
-      playLatticeRecording(canvas);
-    });
+    const fallback = canvas.nextElementSibling;
+    void import('./lattice-recording.js?v=5')
+      .then(({ playLatticeRecording }) => playLatticeRecording(canvas, fallback))
+      .catch(() => fallback?.setAttribute('data-animated', ''));
     return;
   }
 

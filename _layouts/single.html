@@ -23,6 +23,7 @@ layout: default
       </div>
       <div class="research-hero__art" aria-hidden="true">
         <canvas class="research-lattice"{% if site.local_lattice %} data-live-lattice="{{ site.local_lattice | relative_url }}"{% endif %}></canvas>
+        {% unless site.local_lattice %}<div class="research-lattice-fallback"></div>{% endunless %}
       </div>
     </header>
   {% endif %}

@@ -1,9 +1,12 @@
 const layers = ['chain', 'defect', 'pulse'];
 const footage = new URL('../video/lattice-loop.mp4?v=4', import.meta.url);
 
-export function playLatticeRecording(canvas) {
+export function playLatticeRecording(canvas, fallback) {
   const output = canvas.getContext('2d');
-  if (!output) return;
+  if (!output) {
+    fallback?.setAttribute('data-animated', '');
+    return;
+  }
 
   // The three grayscale panels in each video frame hold the opacity of the
   // chain, defects, and messages. Color them to match the active site theme.
@@ -25,16 +28,42 @@ export function playLatticeRecording(canvas) {
   let frame;
   let visible = false;
   let frameRequest;
-  let source;
+  let startupTimer;
+  let failed = false;
+
+  function showFallback() {
+    output.clearRect(0, 0, canvas.width, canvas.height);
+    if (fallback) fallback.hidden = false;
+  }
+
+  function useImageFallback() {
+    if (failed) return;
+    failed = true;
+    clearTimeout(startupTimer);
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    showFallback();
+    fallback?.setAttribute('data-animated', '');
+  }
 
   function draw() {
-    if (!frame || video.readyState < 2) return;
+    if (failed || motion.matches || !frame || video.readyState < 2) return;
+    try {
+      drawVideoFrame();
+    } catch {
+      useImageFallback();
+    }
+  }
+
+  function drawVideoFrame() {
     const size = frame.width;
     reader.drawImage(video, 0, 0, masks.width, size);
     const { data: alpha } = reader.getImageData(0, 0, masks.width, size);
     const { data: rgba } = frame;
     const offset = size * 4;
     const [chain, defect, pulse] = colors;
+    let hasMarks = false;
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < offset; x += 4) {
@@ -47,10 +76,19 @@ export function playLatticeRecording(canvas) {
         const opacity = p + d + c;
         rgba[out + 3] = 255 * opacity;
         if (!opacity) continue;
+        hasMarks = true;
         for (let channel = 0; channel < 3; channel++) {
           rgba[out + channel] = (c * chain[channel] + d * defect[channel] + p * pulse[channel]) / opacity;
         }
       }
+    }
+
+    // The recording starts with a blank fade. Keep the still until marks appear.
+    if (fallback && !fallback.hidden) {
+      if (!hasMarks) return;
+      fallback.hidden = true;
+      clearTimeout(startupTimer);
+      startupTimer = undefined;
     }
 
     painter.putImageData(frame, 0, 0);
@@ -68,7 +106,7 @@ export function playLatticeRecording(canvas) {
   }
 
   function canPlay() {
-    return visible && canvas.isConnected && !document.hidden && !motion.matches;
+    return !failed && visible && canvas.isConnected && !document.hidden && !motion.matches;
   }
 
   function drawNextFrame() {
@@ -85,14 +123,19 @@ export function playLatticeRecording(canvas) {
   }
 
   function syncPlayback() {
-    if (visible && !source) {
-      video.src = footage;
-      source = true;
-    }
     if (canPlay()) {
-      video.play().catch(() => {});
+      if (!video.hasAttribute('src')) video.src = footage;
+      if (fallback && !fallback.hidden && startupTimer === undefined) {
+        startupTimer = setTimeout(useImageFallback, 8000);
+      }
+      video.play().catch(error => {
+        if (canPlay() && error.name !== 'AbortError') useImageFallback();
+      });
     } else {
       video.pause();
+      clearTimeout(startupTimer);
+      startupTimer = undefined;
+      if (motion.matches) showFallback();
     }
   }
 
@@ -105,6 +148,7 @@ export function playLatticeRecording(canvas) {
     draw();
   });
   video.addEventListener('playing', queueFrame);
+  video.addEventListener('error', useImageFallback);
   new ResizeObserver(([entry]) => {
     const size = Math.round(entry.contentRect.width * Math.min(devicePixelRatio, 2));
     if (!size) return;
