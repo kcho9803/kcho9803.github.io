@@ -7,7 +7,8 @@ const root = path.resolve(process.argv[2] || '_site');
 assert(existsSync(root), 'Build the site before running this check.');
 const origin = 'https://kcho9803.github.io';
 const required = ['index.html', 'publications/index.html', 'writing/index.html',
-  'teaching/index.html', 'teaching/em-wave-3d/index.html', 'cv/index.html', '404.html',
+  'teaching/index.html', 'teaching/em-wave-3d/index.html', 'side-projects/index.html',
+  'side-projects/quiet-lattice/index.html', 'side-projects/quiet-lattice/src/ui.js', 'cv/index.html', '404.html',
   'sitemap.xml', 'feed.xml', 'assets/css/main.css'];
 for (const file of required) assert(existsSync(path.join(root, file)), `Missing ${file}`);
 

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A puzzle game about error correction on the toric code: build the small machine that every site of the lattice runs, and watch whether the errors clear.">
+<title>Quiet Lattice</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="back" href="../">← Side projects</a>
+  <div class="mark">Quiet Lattice</div>
+  <nav id="nav" class="nav" aria-label="Levels"></nav>
+  <button id="help-open" class="help-open" type="button" aria-haspopup="dialog" title="How the parts work (?)">Help</button>
+</header>
+
+<main class="layout">
+
+  <section class="stage">
+    <div id="board" class="board">
+      <canvas id="lattice" aria-label="Lattice"></canvas>
+    </div>
+
+    <div id="trial" class="trial" hidden>
+      <div class="trial-bar">
+        <button id="trial-run" class="btn primary" type="button">Run trial</button>
+        <div class="choice" id="trial-schedule" role="group" aria-label="Update order"></div>
+        <div class="choice" id="trial-samples" role="group" aria-label="Lattices per point"></div>
+        <span id="trial-progress" class="quiet-text"></span>
+      </div>
+      <div class="chart-title">Failure rate against noise</div>
+      <div class="chart-sub" id="chart-sub"></div>
+      <div class="legend" id="legend"></div>
+      <div class="chart-wrap" id="chart-wrap">
+        <svg id="chart" viewBox="0 0 640 380" role="img" aria-label="Failure rate against noise for three lattice sizes"></svg>
+        <div id="tip" class="tip" hidden></div>
+      </div>
+      <div id="trial-reading" class="reading"></div>
+      <details class="numbers">
+        <summary>Numbers</summary>
+        <div id="trial-table"></div>
+      </details>
+    </div>
+
+    <div id="transport" class="transport">
+      <button id="play" class="btn primary" type="button">Play</button>
+      <button id="step" class="btn" type="button">Step</button>
+      <button id="reset" class="btn" type="button">Reset</button>
+      <div class="choice" id="speed" role="group" aria-label="Speed"></div>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div id="cases" class="cases"></div>
+    <div id="runs" class="runs"></div>
+    <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
+    <div id="goal" class="goal" hidden></div>
+    <div id="limits" class="limits"></div>
+    <div id="key" class="board-key"></div>
+    <div id="sandbox" class="sandbox" hidden></div>
+  </section>
+
+  <section class="side">
+    <h1 id="title"></h1>
+    <div id="note" class="note">
+      <div class="note-head">
+        <h2 class="note-h">
+          <button id="note-toggle" class="note-toggle" type="button" aria-expanded="true" aria-controls="note-body">
+            <span id="note-mark" class="note-mark" hidden>new</span>
+            <span id="note-label" class="label"></span>
+            <span id="note-title" class="note-title"></span>
+            <span id="note-fold" class="note-fold"></span>
+          </button>
+        </h2>
+        <button id="note-next" class="btn" type="button" hidden></button>
+      </div>
+      <div id="note-body" class="note-body">
+        <div id="coach" class="coach" hidden></div>
+        <div id="brief" class="brief"></div>
+      </div>
+    </div>
+
+    <div class="cards-head">
+      <span class="label">Machine</span>
+      <button id="undo" class="link" type="button" title="Undo the last change to the machine (Ctrl+Z)" disabled>Undo</button>
+      <button id="redo" class="link" type="button" title="Redo what was undone (Ctrl+Shift+Z)" disabled>Redo</button>
+      <span class="quiet-text" id="cards-note"></span>
+      <button id="help-cards" class="link" type="button" aria-haspopup="dialog">How the parts work</button>
+    </div>
+    <div class="rack-row">
+      <div id="rack" class="rack" role="group" aria-label="Circuits of the machine, in order"></div>
+      <button id="add" class="btn" type="button">Add circuit</button>
+    </div>
+    <div id="reads" class="reads" aria-live="polite"></div>
+    <div id="tray" class="tray" role="group" aria-label="Parts"></div>
+    <svg id="bench" class="bench" viewBox="0 0 400 372" role="group" aria-label="Bench: this site and its four neighbours"></svg>
+    <div id="bench-tools" class="bench-tools"></div>
+    <div id="builtin" class="builtin"></div>
+    <div class="cardbar">
+      <button id="clear" class="link" type="button">Remove all</button>
+    </div>
+    <details class="ruletext">
+      <summary>Machine as text</summary>
+      <textarea id="ruletext" spellcheck="false" rows="10" aria-label="Rule as JSON"></textarea>
+      <div class="cardbar">
+        <button id="ruletext-apply" class="btn" type="button">Apply</button>
+        <button id="ruletext-copy" class="link" type="button">Copy</button>
+        <span id="ruletext-note" class="quiet-text"></span>
+      </div>
+    </details>
+  </section>
+
+</main>
+
+<dialog id="help" class="help" aria-labelledby="help-title">
+  <div id="help-body" class="help-body"></div>
+</dialog>
+
+<dialog id="leaderboard" class="help" aria-labelledby="board-title">
+  <div id="leaderboard-body" class="help-body"></div>
+</dialog>
+
+<script src="src/engine.js"></script>
+<script src="src/words.js"></script>
+<script src="src/bench.js"></script>
+<script src="src/ladder.js"></script>
+<script src="src/levels.js"></script>
+<script src="src/par.js"></script>
+<script src="src/board.js"></script>
+<script src="src/coach.js"></script>
+<script src="src/ui.js"></script>
+</body>
+</html>

@@ -250,9 +250,13 @@ a:focus-visible, button:focus-visible, select:focus-visible {
 
 .no-js .site-theme { display: none; }
 
-@media (max-width: 680px) {
+// Six links no longer fit beside the name on a tablet: the menu takes over below 900px.
+@media (max-width: 900px) {
   .site-nav { display: none; }
   .site-menu { display: block; position: relative; margin-inline-start: auto; }
+}
+
+@media (max-width: 680px) {
   .masthead a.site-wordmark { gap: .4rem; font-size: .88rem; }
   .site-theme { padding-inline: .25rem; font-size: .74rem; }
 }

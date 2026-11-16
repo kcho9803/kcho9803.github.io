@@ -26,6 +26,8 @@ The owner wants the web CV to be concise. Education lists degree programs at Pur
 
 The source lists PHYS 221 teaching beginning in January 2026. The website records it as a 2026 role without assuming that the appointment continued after the change in research group.
 
+The Side projects tab and the game Quiet Lattice were added at the owner's request on November 16, 2026. `side-projects/quiet-lattice/` is the output of the game's own publish step: the page, its style sheet and its scripts, without tests, tools or notes. Those files were scanned for private project names, addresses and local paths before they were added. The game's levels, its reference machines and the reference curve in its trial were made for the game. The owner approved the tab's name and description on November 16, 2026, before publication.
+
 ## Details still to fill in
 
 - Any additional appointments or awards since the supplied CV was written.

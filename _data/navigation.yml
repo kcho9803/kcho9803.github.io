@@ -7,5 +7,7 @@ main:
     url: /writing/
   - title: "Teaching"
     url: /teaching/
+  - title: "Side projects"
+    url: /side-projects/
   - title: "CV"
     url: /cv/

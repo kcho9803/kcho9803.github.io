@@ -10,6 +10,8 @@ A Jekyll / GitHub Pages website focused on quantum error correction and quantum 
 - `_data/writing.yml`: links to existing public articles.
 - `_pages/writing.html`: writing index; also lists local posts when added.
 - `_pages/cv.md`: education, research background, and teaching.
+- `_pages/side-projects.md`: games and other work outside of papers.
+- `side-projects/quiet-lattice/`: the game Quiet Lattice. This folder is the output of the game's own publish step, which copies only the page, its style sheet and its scripts. Do not edit it here; publish again from the game's source.
 - `_data/navigation.yml`: main menu.
 - `_sass/_personal.scss`: visual refinements.
 
